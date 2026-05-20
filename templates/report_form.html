@@ -75,15 +75,15 @@
               <input name="bal_{{ a.id }}" type="number" step="0.01" min="0" required
                      class="bal-input"
                      value="{{ b.balance if b.balance is not none else '' }}">
-              {% if lb.balance is not none %}
+              {% if lb.get('balance') is not none %}
                 <button type="button" class="chip" onclick="setBal({{ a.id }}, 'balance', {{ lb.balance }})">use last: {{ lb.balance | usd0 }}</button>
               {% endif %}
             </td>
             <td>
               {% if a.is_investment %}
                 <input name="cash_{{ a.id }}" type="number" step="0.01" min="0"
-                       value="{{ b.cash_balance if b.cash_balance is not none else '' }}">
-                {% if lb.cash_balance is not none %}
+                       value="{{ b.cash_balance if b.get('cash_balance') is not none else '' }}">
+                {% if lb.get('cash_balance') is not none %}
                   <button type="button" class="chip" onclick="setBal({{ a.id }}, 'cash', {{ lb.cash_balance }})">use last: {{ lb.cash_balance | usd0 }}</button>
                 {% endif %}
               {% else %}<span class="hint">—</span>{% endif %}
@@ -111,7 +111,7 @@
               <input name="bal_{{ a.id }}" type="number" step="0.01" min="0" required
                      class="bal-input"
                      value="{{ b.balance if b.balance is not none else '' }}">
-              {% if lb.balance is not none %}
+              {% if lb.get('balance') is not none %}
                 <button type="button" class="chip" onclick="setBal({{ a.id }}, 'balance', {{ lb.balance }})">use last: {{ lb.balance | usd0 }}</button>
               {% endif %}
             </td>
