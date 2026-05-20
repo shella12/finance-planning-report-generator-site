@@ -148,6 +148,30 @@ def build_account_balances(client_id: int, balances_by_account: dict[int, dict])
     return result
 
 
+REQUIRED_REPORT_FIELDS = (
+    "inflow_monthly",
+    "outflow_monthly",
+    "private_reserve_balance",
+    "investment_account_balance",
+    "trust_zillow_value",
+)
+
+
+def is_report_complete(report: dict, accounts, balances_by_account: dict[int, dict]) -> bool:
+    """A report is complete when every required cashflow field has a value
+    and every account on the client has a balance entry for this report.
+    Cash-balance subfields are optional; only the headline balance is required.
+    """
+    for field in REQUIRED_REPORT_FIELDS:
+        if report.get(field) is None:
+            return False
+    for a in accounts:
+        b = balances_by_account.get(a["id"], {})
+        if b.get("balance") is None:
+            return False
+    return True
+
+
 def compute_report_results(client_id: int, report: dict, balances_by_account: dict[int, dict]):
     client = get_client_or_404(client_id)
     deductibles = get_deductibles(client_id)
@@ -165,6 +189,23 @@ def compute_report_results(client_id: int, report: dict, balances_by_account: di
 
     account_balances = build_account_balances(client_id, balances_by_account)
     tcc = compute_tcc(account_balances, trust_value=report.get("trust_zillow_value") or 0)
+
+    # Split non-retirement accounts into left/right columns for the TCC layout:
+    # owner=='client1' → left, owner=='client2' → right, joint → alternate to balance.
+    nr_left, nr_right = [], []
+    for b in tcc.non_retirement:
+        if b.owner == "client1":
+            nr_left.append(b)
+        elif b.owner == "client2":
+            nr_right.append(b)
+        else:
+            (nr_left if len(nr_left) <= len(nr_right) else nr_right).append(b)
+    tcc.non_retirement_left = nr_left
+    tcc.non_retirement_right = nr_right
+    # Same split for retirement (per-spouse already filtered, but mirror the attribute names)
+    tcc.retirement_left = tcc.retirement_client1
+    tcc.retirement_right = tcc.retirement_client2
+
     return client, deductibles, sacs, tcc, account_balances
 
 
@@ -277,8 +318,10 @@ def register_routes(app: Flask):
         report = dbmod.query("SELECT * FROM reports WHERE id = ?", (report_id,), one=True)
         if not report:
             abort(404)
+        accounts = get_accounts(report["client_id"])
         balances = {b["account_id"]: dict(b) for b in get_report_balances(report_id)}
         client, deductibles, sacs, tcc, _ = compute_report_results(report["client_id"], dict(report), balances)
+        complete = is_report_complete(dict(report), accounts, balances)
         return render_template(
             "report_view.html",
             client=client,
@@ -286,6 +329,7 @@ def register_routes(app: Flask):
             sacs=sacs,
             tcc=tcc,
             deductibles=deductibles,
+            is_complete=complete,
             calc_age=calc_age,
         )
 
@@ -306,7 +350,10 @@ def register_routes(app: Flask):
         report = dbmod.query("SELECT * FROM reports WHERE id = ?", (report_id,), one=True)
         if not report:
             abort(404)
+        accounts = get_accounts(report["client_id"])
         balances = {b["account_id"]: dict(b) for b in get_report_balances(report_id)}
+        if not is_report_complete(dict(report), accounts, balances):
+            abort(400, description="Report has missing required values.")
         client, deductibles, sacs, tcc, _ = compute_report_results(
             report["client_id"], dict(report), balances
         )
@@ -321,11 +368,12 @@ def register_routes(app: Flask):
         )
         safe_name = (client["label"] or "client").replace(" ", "_")
         filename = f"{safe_name}_{kind.upper()}_{report['report_date']}.pdf"
+        inline = request.args.get("inline") == "1"
         from io import BytesIO
         return send_file(
             BytesIO(pdf_bytes),
             mimetype="application/pdf",
-            as_attachment=True,
+            as_attachment=not inline,
             download_name=filename,
         )
 

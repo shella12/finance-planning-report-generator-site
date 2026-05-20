@@ -5,140 +5,145 @@
 <link rel="stylesheet" href="{{ pdf_css_path }}">
 </head><body class="tcc">
 
-<div class="report-header">
-  <div class="left">Total Client Chart</div>
-  <div class="right">As of {{ report.report_date }}</div>
-</div>
-<h1 class="report-title">TCC</h1>
+{# Short date for inside-bubble "a/o" footers (M/D/YY) #}
+{% set rd = report.report_date %}
+{% set rdate_short = rd[5:7] | int ~ '/' ~ rd[8:10] | int ~ '/' ~ rd[2:4] %}
 
-<!-- Top: client info bubbles -->
-<div class="client-banner-row">
-  <div class="client-bubble">
+<!-- =========== Top strip: NAME/DATE + Grand Total =========== -->
+<div class="tcc-topbar">
+  <div class="tcc-meta">
+    <div><span class="lbl">NAME</span> <span class="val">{{ client.client1_name }}{% if client.is_married %} &amp; {{ client.client2_name }}{% endif %}</span></div>
+    <div><span class="lbl">DATE</span> <span class="val">{{ rdate_short }}</span></div>
+  </div>
+  <div class="tcc-grand-total">
+    <div class="lbl">GRAND TOTAL</div>
+    <div class="val">{{ "${:,.2f}".format(tcc.grand_total_net_worth) }}</div>
+  </div>
+  <div class="tcc-meta-spacer"></div>
+</div>
+
+<!-- =========== Clients summary row =========== -->
+<div class="tcc-clients-row">
+  <div class="tcc-summary-box">
+    <div class="lbl">Client 1 Retirement Only</div>
+    <div class="val">{{ "${:,.2f}".format(tcc.client1_retirement_total) }}</div>
+  </div>
+
+  <div class="tcc-client-oval">
     <div class="name">{{ client.client1_name }}</div>
-    <div class="meta">DOB {{ client.client1_dob }} · age {{ calc_age(client.client1_dob, report.report_date) or '?' }} · SSN ●●●-●●-{{ client.client1_ssn_last4 or '____' }}</div>
-  </div>
-  {% if client.is_married %}
-  <div class="client-bubble">
-    <div class="name">{{ client.client2_name }}</div>
-    <div class="meta">DOB {{ client.client2_dob }} · age {{ calc_age(client.client2_dob, report.report_date) or '?' }} · SSN ●●●-●●-{{ client.client2_ssn_last4 or '____' }}</div>
-  </div>
-  {% endif %}
-</div>
-
-<!-- Summary boxes row: C1 ret total | Liab total | C2 ret total -->
-<div class="tcc-row">
-  <div class="tcc-col"><div class="summary-box">
-    <div class="label">Client 1 Retirement Total</div>
-    <div class="value">{{ "${:,.2f}".format(tcc.client1_retirement_total) }}</div>
-  </div></div>
-  <div class="tcc-col"><div class="summary-box">
-    <div class="label">Liabilities Total <span style="font-weight:normal">(separate)</span></div>
-    <div class="value">{{ "${:,.2f}".format(tcc.liabilities_total) }}</div>
-  </div></div>
-  {% if client.is_married %}
-  <div class="tcc-col"><div class="summary-box">
-    <div class="label">Client 2 Retirement Total</div>
-    <div class="value">{{ "${:,.2f}".format(tcc.client2_retirement_total) }}</div>
-  </div></div>
-  {% endif %}
-</div>
-
-<!-- Retirement quadrants -->
-<div class="tcc-row">
-  <div class="tcc-col">
-    <div class="section-block">
-      <h3>{{ client.client1_name }} — Retirement</h3>
-      {% if not tcc.retirement_client1 %}<p class="hint" style="margin:0;font-size:8pt;color:#999">No retirement accounts.</p>{% endif %}
-      {% for b in tcc.retirement_client1 %}
-        <div class="account-bubble" style="width:48%">
-          <div class="type">{{ b.account_type }}{% if b.nickname %} — {{ b.nickname }}{% endif %}</div>
-          <div class="acct-num">#####{{ b.account_number_last4 or '----' }}</div>
-          <div class="balance">{{ "${:,.2f}".format(b.balance) }}</div>
-          {% if b.cash_balance is not none %}<div class="cash">cash: {{ "${:,.2f}".format(b.cash_balance) }}</div>{% endif %}
-        </div>
-      {% endfor %}
+    <div class="meta">
+      Age {{ calc_age(client.client1_dob, report.report_date) or '—' }}<br>
+      DOB {{ client.client1_dob }}<br>
+      SSN ●●●-●●-{{ client.client1_ssn_last4 or '----' }}
     </div>
   </div>
-  {% if client.is_married %}
-  <div class="tcc-col">
-    <div class="section-block">
-      <h3>{{ client.client2_name }} — Retirement</h3>
-      {% if not tcc.retirement_client2 %}<p class="hint" style="margin:0;font-size:8pt;color:#999">No retirement accounts.</p>{% endif %}
-      {% for b in tcc.retirement_client2 %}
-        <div class="account-bubble" style="width:48%">
-          <div class="type">{{ b.account_type }}{% if b.nickname %} — {{ b.nickname }}{% endif %}</div>
-          <div class="acct-num">#####{{ b.account_number_last4 or '----' }}</div>
-          <div class="balance">{{ "${:,.2f}".format(b.balance) }}</div>
-          {% if b.cash_balance is not none %}<div class="cash">cash: {{ "${:,.2f}".format(b.cash_balance) }}</div>{% endif %}
-        </div>
-      {% endfor %}
-    </div>
+
+  <div class="tcc-summary-box tcc-summary-mid">
+    <div class="lbl">Liabilities</div>
+    <div class="val">{{ "${:,.2f}".format(tcc.liabilities_total) }}</div>
   </div>
-  {% endif %}
-</div>
 
-<!-- Trust (center) -->
-{% if tcc.trust_value or client.trust_property_address %}
-<div class="trust-bubble">
-  <div class="label">Trust</div>
-  <div class="address">{{ client.trust_property_address or '(address on file)' }}</div>
-  <div class="value">{{ "${:,.0f}".format(tcc.trust_value) }}</div>
-  <div class="note">Zestimate; updated quarterly</div>
-</div>
-{% endif %}
-
-<!-- Non-retirement (bottom, fluid) -->
-<div class="section-block">
-  <h3>Non-Retirement Accounts</h3>
-  {% if not tcc.non_retirement %}<p class="hint" style="margin:0;font-size:8pt;color:#999">No non-retirement accounts.</p>{% endif %}
-  {% for b in tcc.non_retirement %}
-    <div class="account-bubble">
-      <div class="type">
-        {{ b.account_type }}{% if b.nickname %} — {{ b.nickname }}{% endif %}
-        <span style="font-weight:normal;font-size:7pt;color:#888">
-        ({% if b.owner == 'joint' %}joint{% else %}{{ b.owner | replace('client','C') }}{% endif %})
-        </span>
+  {% if client.is_married %}
+    <div class="tcc-client-oval">
+      <div class="name">{{ client.client2_name }}</div>
+      <div class="meta">
+        Age {{ calc_age(client.client2_dob, report.report_date) or '—' }}<br>
+        DOB {{ client.client2_dob }}<br>
+        SSN ●●●-●●-{{ client.client2_ssn_last4 or '----' }}
       </div>
-      <div class="acct-num">#####{{ b.account_number_last4 or '----' }}</div>
-      <div class="balance">{{ "${:,.2f}".format(b.balance) }}</div>
-      {% if b.cash_balance is not none %}<div class="cash">cash: {{ "${:,.2f}".format(b.cash_balance) }}</div>{% endif %}
     </div>
-  {% endfor %}
+    <div class="tcc-summary-box">
+      <div class="lbl">Client 2 Retirement Only</div>
+      <div class="val">{{ "${:,.2f}".format(tcc.client2_retirement_total) }}</div>
+    </div>
+  {% endif %}
 </div>
 
-<div class="summary-box" style="margin-bottom: 8pt;">
-  <div class="label">Non-Retirement Total <span style="font-weight:normal">(accounts only, trust NOT included)</span></div>
-  <div class="value">{{ "${:,.2f}".format(tcc.non_retirement_total) }}</div>
+{% macro bubble(b, short_date) -%}
+<div class="tcc-bubble-wrap">
+  <div class="tcc-bubble">
+    <div class="acct-num">ACCT #{% if b.account_number_last4 %} {{ b.account_number_last4 }}{% endif %}</div>
+    <div class="acct-type">{{ b.account_type }}</div>
+    <div class="acct-bal">{{ "${:,.2f}".format(b.balance) }}</div>
+    <div class="acct-date">a/o {{ short_date }}</div>
+  </div>
+  {% if b.cash_balance is not none %}
+    <div class="tcc-cash-circle">{{ "${:,.0f}".format(b.cash_balance) }}</div>
+  {% endif %}
+</div>
+{%- endmacro %}
+
+<!-- =========== RETIREMENT section =========== -->
+<div class="tcc-section">
+  <div class="tcc-section-label left">RETIREMENT</div>
+
+  <div class="tcc-grid">
+    <div class="tcc-col tcc-col-accounts">
+      {% for b in tcc.retirement_left %}{{ bubble(b, rdate_short) }}{% endfor %}
+    </div>
+
+    <div class="tcc-col tcc-col-center">
+      <div class="tcc-trust">
+        <div class="trust-name">
+          {{ client.client1_name }}{% if client.is_married %} and {{ client.client2_name }}{% endif %}<br>
+          Family Trust
+        </div>
+        <div class="acct-bal">{{ "${:,.2f}".format(tcc.trust_value) }}</div>
+        <div class="acct-date">a/o {{ rdate_short }}</div>
+        {% if client.trust_property_address %}
+        <div class="trust-addr">{{ client.trust_property_address }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="tcc-col tcc-col-accounts">
+      {% if client.is_married %}
+        {% for b in tcc.retirement_right %}{{ bubble(b, rdate_short) }}{% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="tcc-section-label right">RETIREMENT</div>
 </div>
 
-<!-- Liabilities table -->
-{% if tcc.liabilities %}
-<div class="section-block">
-  <h3>Liabilities <span style="font-weight:normal;text-transform:none;font-size:8pt;color:#888">(separate from net worth)</span></h3>
-  <table class="liabilities">
-    <thead><tr><th>Type</th><th>Interest rate</th><th style="text-align:right">Balance</th></tr></thead>
-    <tbody>
-      {% for b in tcc.liabilities %}
-      <tr>
-        <td>{{ b.account_type }}{% if b.nickname %} — {{ b.nickname }}{% endif %}</td>
-        <td>{% if b.interest_rate %}{{ "%.3f"|format(b.interest_rate) }}%{% else %}—{% endif %}</td>
-        <td style="text-align:right">{{ "${:,.2f}".format(b.balance) }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-    <tfoot><tr><td colspan="2">Total liabilities</td><td style="text-align:right">{{ "${:,.2f}".format(tcc.liabilities_total) }}</td></tr></tfoot>
-  </table>
-</div>
-{% endif %}
+<!-- =========== NON-RETIREMENT section =========== -->
+<div class="tcc-section">
+  <div class="tcc-section-label left">NON RETIREMENT</div>
 
-<!-- Grand total -->
-<div class="grand-total-box">
-  <div class="label">Grand Total Net Worth</div>
-  <div class="value">{{ "${:,.2f}".format(tcc.grand_total_net_worth) }}</div>
+  <div class="tcc-grid">
+    <div class="tcc-col tcc-col-accounts">
+      {% for b in tcc.non_retirement_left %}{{ bubble(b, rdate_short) }}{% endfor %}
+    </div>
+
+    <div class="tcc-col tcc-col-center">
+      <div class="tcc-liab-table">
+        <div class="lt-header">Liabilities</div>
+        {% for b in tcc.liabilities %}
+          <div class="lt-row">
+            <span class="lt-name">{{ b.nickname or b.account_type }}</span>
+            <span class="lt-amt">{{ "${:,.2f}".format(b.balance) }}</span>
+          </div>
+        {% else %}
+          <div class="lt-row lt-empty">No liabilities</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="tcc-col tcc-col-accounts">
+      {% for b in tcc.non_retirement_right %}{{ bubble(b, rdate_short) }}{% endfor %}
+    </div>
+  </div>
+
+  <div class="tcc-section-label right">NON RETIREMENT</div>
 </div>
 
-<div class="footnote">
-  Net worth = Client 1 Retirement + Client 2 Retirement + Non-Retirement + Trust.
-  Liabilities shown separately and NOT subtracted. Generated by AW Client Report Portal.
+<!-- =========== Bottom bar =========== -->
+<div class="tcc-bottombar">
+  <div class="tcc-summary-box tcc-bottom-total">
+    <div class="lbl">NON RETIREMENT TOTAL</div>
+    <div class="val">{{ "${:,.2f}".format(tcc.non_retirement_total) }}</div>
+  </div>
+  <div class="tcc-stale-note">* Indicates we do not have up to date information</div>
 </div>
+
 </body></html>

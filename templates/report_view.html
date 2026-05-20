@@ -5,8 +5,36 @@
 <div class="page-head">
   <h1>{{ report.report_date }} — {{ client.label }}</h1>
   <div class="page-head-actions">
-    <a class="btn primary" href="{{ url_for('report_pdf', report_id=report.id, kind='sacs') }}">Download SACS PDF</a>
-    <a class="btn primary" href="{{ url_for('report_pdf', report_id=report.id, kind='tcc') }}">Download TCC PDF</a>
+    {% for kind, label in [('sacs', 'SACS'), ('tcc', 'TCC')] %}
+      <span class="btn-split {% if not is_complete %}is-disabled{% endif %}"
+            {% if not is_complete %}title="Fill all balances before previewing"{% endif %}>
+        {% if is_complete %}
+          <a class="btn primary btn-split-main"
+             href="{{ url_for('report_pdf', report_id=report.id, kind=kind) }}?inline=1"
+             target="_blank" rel="noopener">Preview {{ label }} PDF</a>
+          <a class="btn primary btn-split-icon"
+             href="{{ url_for('report_pdf', report_id=report.id, kind=kind) }}"
+             title="Download {{ label }} PDF" aria-label="Download {{ label }} PDF">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </a>
+        {% else %}
+          <span class="btn primary btn-split-main" aria-disabled="true">Preview {{ label }} PDF</span>
+          <span class="btn primary btn-split-icon" aria-disabled="true" aria-label="Download {{ label }} PDF">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </span>
+        {% endif %}
+      </span>
+    {% endfor %}
     <a class="btn" href="{{ url_for('report_edit', report_id=report.id) }}">Edit</a>
     <form method="post" action="{{ url_for('report_delete', report_id=report.id) }}" style="display:inline"
           onsubmit="return confirm('Delete this report?')">
@@ -14,6 +42,13 @@
     </form>
   </div>
 </div>
+
+{% if not is_complete %}
+<p class="hint" style="margin: 0 0 16px;">
+  ⚠ Some balances are missing — preview &amp; download will unlock once every required field is filled.
+  <a href="{{ url_for('report_edit', report_id=report.id) }}">Edit report →</a>
+</p>
+{% endif %}
 
 <section class="card">
   <h2>SACS</h2>

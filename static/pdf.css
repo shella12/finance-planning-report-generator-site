@@ -49,91 +49,211 @@ h1.report-title { font-size: 18pt; margin: 0; text-align: center; color: #1d4ed8
 .target-box .value { font-size: 16pt; font-weight: 700; color: #1d4ed8; }
 .target-formula { font-size: 8pt; color: #888; margin-top: 6pt; }
 
-/* ============== TCC ============== */
-.tcc { font-size: 9pt; }
-.tcc-row { display: flex; justify-content: space-between; gap: 6pt; margin-bottom: 6pt; }
-.tcc-col { flex: 1; }
+/* ============================================================ */
+/* ============== TCC (Total Client Chart) ==================== */
+/* ============================================================ */
+body.tcc { font-size: 8pt; padding: 0 18pt; }
 
-.summary-box {
+/* ---------- Top bar: NAME/DATE on left, GRAND TOTAL center ---------- */
+.tcc-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8pt;
+  margin-bottom: 8pt;
+}
+.tcc-meta { flex: 1; font-size: 9pt; }
+.tcc-meta .lbl { color: #555; font-weight: 600; margin-right: 4pt; }
+.tcc-meta .val { border-bottom: 0.5pt solid #555; padding: 0 4pt 1pt; min-width: 80pt; display: inline-block; }
+.tcc-meta div { margin-bottom: 3pt; }
+.tcc-meta-spacer { flex: 1; }
+
+.tcc-grand-total {
   background: #e5e7eb;
-  padding: 6pt 8pt;
-  border-radius: 3pt;
-  font-size: 9pt;
+  border: 0.5pt solid #9ca3af;
+  padding: 6pt 16pt;
   text-align: center;
 }
-.summary-box .label { color: #555; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.5pt; }
-.summary-box .value { font-weight: 700; font-size: 11pt; }
+.tcc-grand-total .lbl { font-size: 9pt; font-weight: 700; letter-spacing: 0.5pt; color: #333; }
+.tcc-grand-total .val { font-size: 14pt; font-weight: 700; color: #111; }
 
-.client-banner-row { display: flex; justify-content: space-between; gap: 8pt; margin-bottom: 8pt; }
-.client-bubble {
-  flex: 1;
-  background: #16a34a;
-  color: white;
-  border-radius: 16pt;
-  padding: 8pt 12pt;
+/* ---------- Clients summary row ---------- */
+.tcc-clients-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6pt;
+  margin-bottom: 8pt;
+}
+.tcc-summary-box {
+  background: #e5e7eb;
+  border: 0.5pt solid #9ca3af;
+  padding: 6pt 8pt;
+  text-align: center;
   font-size: 9pt;
+  min-width: 110pt;
 }
-.client-bubble .name { font-weight: 700; font-size: 11pt; margin-bottom: 2pt; }
-.client-bubble .meta { opacity: 0.95; font-size: 8pt; }
+.tcc-summary-box .lbl { color: #333; font-size: 8pt; font-weight: 600; }
+.tcc-summary-box .val { font-weight: 700; font-size: 11pt; color: #111; }
+.tcc-summary-box.tcc-summary-mid { min-width: 100pt; padding: 4pt 8pt; }
+.tcc-summary-box.tcc-summary-mid .val { font-size: 9pt; }
 
-.section-block {
-  border: 1pt solid #d1d5db;
-  border-radius: 4pt;
-  padding: 8pt;
-  margin-bottom: 6pt;
+.tcc-client-oval {
+  background: #6b9c4a;
+  color: white;
+  border-radius: 50%;
+  width: 130pt;
+  height: 80pt;
+  padding: 6pt 10pt;
+  text-align: center;
+  line-height: 1.2;
 }
-.section-block > h3 {
-  margin: 0 0 6pt; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.5pt;
-  color: #555; border-bottom: 1pt solid #e5e7eb; padding-bottom: 3pt;
-}
+.tcc-client-oval .name { font-weight: 700; font-size: 10pt; margin: 2pt 0 3pt; }
+.tcc-client-oval .meta { font-size: 7pt; line-height: 1.3; }
 
-.account-bubble {
-  display: inline-block;
-  width: 32%;
-  background: white;
-  border: 1pt solid #9ca3af;
-  border-radius: 6pt;
-  padding: 6pt 7pt;
-  margin: 0 0.5% 5pt;
-  vertical-align: top;
+/* ---------- Section wrapper with rotated side labels ---------- */
+.tcc-section {
+  position: relative;
+  margin-bottom: 8pt;
+  padding: 4pt 22pt;
   page-break-inside: avoid;
 }
-.account-bubble .type { font-weight: 700; font-size: 9pt; }
-.account-bubble .acct-num { font-size: 7pt; color: #555; }
-.account-bubble .balance { font-size: 11pt; font-weight: 700; color: #111; margin: 2pt 0; }
-.account-bubble .cash { font-size: 7pt; color: #1d4ed8; }
-.account-bubble.stale::after {
-  content: "*"; color: #dc2626; font-weight: 700; margin-left: 2pt;
+.tcc-section-label {
+  position: absolute;
+  top: 50%;
+  transform: rotate(-90deg) translateX(50%);
+  transform-origin: center;
+  font-size: 11pt;
+  letter-spacing: 2pt;
+  color: #c2a35a;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tcc-section-label.left { left: -22pt; }
+.tcc-section-label.right { right: -22pt; transform: rotate(90deg) translateX(-50%); }
+
+/* ---------- 3-column grid: accounts | center | accounts ---------- */
+.tcc-grid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6pt;
+}
+.tcc-col-accounts {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6pt 4pt;
+}
+.tcc-col-center {
+  flex: 0 0 30%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8pt;
 }
 
-.trust-bubble {
+/* ---------- Account bubble (white circle) ---------- */
+.tcc-bubble-wrap {
+  position: relative;
+  display: inline-block;
+  margin: 0 3pt 22pt;
+  text-align: center;
+  vertical-align: top;
+}
+.tcc-bubble {
+  width: 90pt;
+  height: 90pt;
+  border-radius: 50%;
+  border: 0.6pt solid #333;
   background: white;
-  border: 1.5pt dashed #6b7280;
-  border-radius: 8pt;
-  padding: 10pt;
+  padding: 14pt 6pt;
   text-align: center;
-  margin: 6pt auto;
-  width: 60%;
+  line-height: 1.2;
+  overflow: hidden;
 }
-.trust-bubble .label { font-size: 8pt; color: #555; text-transform: uppercase; letter-spacing: 0.5pt; }
-.trust-bubble .address { font-size: 9pt; margin: 3pt 0; }
-.trust-bubble .value { font-size: 14pt; font-weight: 700; color: #16a34a; }
-.trust-bubble .note { font-size: 7pt; color: #888; }
+.tcc-bubble .acct-num { font-size: 6.5pt; color: #555; }
+.tcc-bubble .acct-type { font-weight: 700; font-size: 8pt; margin: 1pt 0 2pt; }
+.tcc-bubble .acct-bal { font-weight: 700; font-size: 9pt; color: #111; margin: 2pt 0; }
+.tcc-bubble .acct-date { font-size: 6pt; color: #777; }
 
-table.liabilities { width: 100%; border-collapse: collapse; font-size: 9pt; }
-table.liabilities th, table.liabilities td { padding: 4pt 6pt; border-bottom: 1pt solid #e5e7eb; text-align: left; }
-table.liabilities th { background: #f3f4f6; text-transform: uppercase; font-size: 8pt; color: #555; letter-spacing: 0.5pt; }
-table.liabilities tfoot td { font-weight: 700; border-top: 1pt solid #9ca3af; }
+/* Cash sub-circle attached below */
+.tcc-cash-circle {
+  position: absolute;
+  left: 50%;
+  bottom: -14pt;
+  transform: translateX(-50%);
+  width: 30pt;
+  height: 30pt;
+  border-radius: 50%;
+  border: 0.6pt solid #333;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7pt;
+  font-weight: 600;
+  color: #111;
+}
 
-.grand-total-box {
-  background: #111827;
-  color: white;
-  padding: 12pt;
-  border-radius: 4pt;
+/* ---------- Trust circle (center, retirement section) ---------- */
+.tcc-trust {
+  width: 150pt;
+  height: 150pt;
+  border-radius: 50%;
+  border: 0.6pt solid #333;
+  background: white;
+  padding: 28pt 18pt 18pt;
   text-align: center;
-  margin-top: 8pt;
+  line-height: 1.25;
+  overflow: hidden;
 }
-.grand-total-box .label { font-size: 9pt; opacity: 0.7; text-transform: uppercase; letter-spacing: 1pt; }
-.grand-total-box .value { font-size: 22pt; font-weight: 700; }
+.tcc-trust .trust-name { font-weight: 700; font-size: 8pt; margin-bottom: 6pt; }
+.tcc-trust .acct-bal { font-weight: 700; font-size: 11pt; color: #111; margin: 4pt 0 2pt; }
+.tcc-trust .acct-date { font-size: 6pt; color: #777; }
+.tcc-trust .trust-addr { font-size: 5.5pt; color: #555; margin-top: 4pt; }
 
-.footnote { font-size: 7pt; color: #888; margin-top: 6pt; text-align: center; }
+/* ---------- Liabilities table (center, non-ret section) ---------- */
+.tcc-liab-table {
+  background: white;
+  border: 0.6pt solid #333;
+  padding: 6pt 10pt;
+  min-width: 150pt;
+  font-size: 8pt;
+}
+.tcc-liab-table .lt-header {
+  text-align: center;
+  font-weight: 700;
+  font-size: 9pt;
+  margin-bottom: 4pt;
+  border-bottom: 0.5pt solid #999;
+  padding-bottom: 3pt;
+}
+.tcc-liab-table .lt-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8pt;
+  padding: 1pt 0;
+}
+.tcc-liab-table .lt-row.lt-empty { color: #999; font-style: italic; justify-content: center; }
+.tcc-liab-table .lt-name { color: #333; }
+.tcc-liab-table .lt-amt { font-weight: 600; color: #111; }
+
+/* ---------- Bottom bar: Non-Retirement Total + stale note ---------- */
+.tcc-bottombar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12pt;
+  margin-top: 6pt;
+}
+.tcc-bottom-total { min-width: 180pt; }
+.tcc-stale-note {
+  font-size: 8pt;
+  color: #c2331f;
+  font-style: italic;
+  flex: 1;
+  text-align: right;
+}
