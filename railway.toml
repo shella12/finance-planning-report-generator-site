@@ -1,11 +1,15 @@
 # Tells Railway to use the Dockerfile builder instead of railpack.
 # Required because WeasyPrint needs system libraries (pango/cairo) that
 # railpack's default Python image doesn't include.
+#
+# IMPORTANT: builder and restartPolicyType values are ENUM names and must
+# be UPPERCASE. Lowercase values are silently ignored by Railway and the
+# service falls back to railpack auto-detection.
 
 [build]
-builder = "dockerfile"
+builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-restartPolicyType = "on_failure"
+restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
