@@ -73,7 +73,7 @@ body.tcc { font-size: 8pt; padding: 0 14pt; }
 }
 
 /* Grey summary boxes (per-client totals + net worth at bottom) */
-.tcc-summary-box {
+/* .tcc-summary-box {
   background: #4e4e4e;
   border: 0.5pt solid #000000;
   padding: 5pt 6pt;
@@ -82,7 +82,7 @@ body.tcc { font-size: 8pt; padding: 0 14pt; }
   min-width: 88pt;
   max-width: 110pt;
   flex-shrink: 0;
-}
+} */
 .tcc-summary-box .lbl { color: #ffffff; font-size: 7.5pt; font-weight: 600; line-height: 1.15; }
 .tcc-summary-box .val { font-weight: 700; font-size: 10pt; color: #fff; }
 
@@ -98,57 +98,49 @@ body.tcc { font-size: 8pt; padding: 0 14pt; }
 .tcc-summary-box.tcc-summary-mid .val { font-size: 9pt; }
 .tcc-summary-box.tcc-summary-mid .acct-date { font-size: 6pt; color: #555; }
 
-/* Center stack: Retirement Total + Liabilities, stacked vertically */
-.tcc-top-center-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 3pt;
-  align-items: stretch;
-  flex-shrink: 0;
+/* Center stack: Retirement Total + Liabilities, stacked vertically, wider */
+
+.tcc-top-center-stack .tcc-summary-box {
+  max-width: none;
+  min-width: 0;
+  width: 100%;
 }
 
 /* Client ovals — light sky blue */
-.tcc-client-oval {
-  background: #87CEFA;
-  color: white;
-  border: 1pt solid #000;
-  border-radius: 50%;
-  width: 95pt;
-  height: 60pt;
-  padding: 4pt 6pt;
-  text-align: center;
-  line-height: 1.15;
-  flex-shrink: 0;
-}
+
 .tcc-client-oval .name { font-weight: 700; font-size: 8.5pt; margin: 1pt 0 1pt; }
 .tcc-client-oval .meta { font-size: 6pt; line-height: 1.25; }
 
-/* ---------- Section wrapper with rotated side labels ---------- */
+/* ---------- Section wrapper with horizontal corner labels ---------- */
 .tcc-section {
   position: relative;
-  padding: 4pt 18pt;
+  padding: 24pt 8pt 8pt;
   page-break-inside: avoid;
 }
+
+/* Horizontal divider between retirement and non-retirement — full width, thicker */
 .tcc-section-second {
-  border-top: 0.6pt solid #999;
-  margin-top: 4pt;
-  padding-top: 8pt;
+  border-top: 1pt solid #333;
+  margin-top: 6pt;
+  padding-top: 16pt;
 }
+
+/* Section labels sit horizontally in the corners */
 .tcc-section-label {
   position: absolute;
-  top: 50%;
-  transform: rotate(-90deg) translateX(50%);
-  transform-origin: center;
-  font-size: 10pt;
-  letter-spacing: 2pt;
+  top: 8pt;
+  font-size: 9pt;
+  letter-spacing: 1.5pt;
   color: #c2a35a;
   font-weight: 700;
   white-space: nowrap;
+  transform: none;
 }
-.tcc-section-label.left { left: -20pt; }
-.tcc-section-label.right { right: -20pt; transform: rotate(90deg) translateX(-50%); }
+.tcc-section-label.left { left: 0; }
+.tcc-section-label.right { right: 0; }
 
-/* Vertical divider line for retirement section (married) */
+/* Vertical divider line for retirement section (married),
+   extending slightly into the non-retirement section */
 .tcc-section-divided {
   position: relative;
 }
@@ -157,9 +149,10 @@ body.tcc { font-size: 8pt; padding: 0 14pt; }
   position: absolute;
   left: 50%;
   top: 0;
-  bottom: 0;
+  bottom: -20pt;
   width: 1pt;
   background: #000;
+  z-index: 0;
 }
 
 /* ---------- 2-column grid for divided retirement ---------- */
@@ -295,4 +288,103 @@ body.tcc { font-size: 8pt; padding: 0 14pt; }
   font-style: italic;
   flex: 1;
   text-align: right;
+}
+
+/* Center stack: narrower so the full row actually fits */
+.tcc-top-center-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3pt;
+  align-items: stretch;
+  flex-shrink: 0;
+  width: 150pt;          /* was 200pt */
+}
+
+/* Slightly smaller ovals and tighter grey boxes for breathing room */
+.tcc-client-oval {
+  background: #87CEFA;
+  color: white;
+  border: 1pt solid #000;
+  border-radius: 50%;
+  width: 88pt;           /* was 95pt */
+  height: 56pt;          /* was 60pt */
+  padding: 4pt 6pt;
+  text-align: center;
+  line-height: 1.15;
+  flex-shrink: 0;
+}
+
+.tcc-summary-box {
+  background: #4e4e4e;
+  border: 0.5pt solid #000000;
+  padding: 5pt 6pt;
+  text-align: center;
+  font-size: 8pt;
+  min-width: 80pt;       /* was 88pt */
+  max-width: 100pt;      /* was 110pt */
+  flex-shrink: 0;
+}
+
+/* More breathing room around center stack — push ovals away */
+.tcc-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12pt;            /* was 8pt — more space between elements */
+  margin-bottom: 6pt;
+}
+
+/* Center stack narrower so ovals don't crowd it */
+.tcc-top-center-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3pt;
+  align-items: stretch;
+  flex-shrink: 0;
+  width: 130pt;         /* was 150pt — gives ovals room */
+}
+
+/* RETIREMENT labels: pull them down + away from bubbles */
+.tcc-section-label {
+  position: absolute;
+  top: 4pt;
+  font-size: 9pt;
+  letter-spacing: 1.5pt;
+  color: #c2a35a;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: none;
+  z-index: 1;
+}
+.tcc-section-label.left { left: 8pt; }
+.tcc-section-label.right { right: 8pt; }
+
+/* More top padding in sections so bubbles don't crowd labels */
+.tcc-section {
+  position: relative;
+  padding: 32pt 8pt 8pt;   /* was 24pt top */
+  page-break-inside: avoid;
+}
+
+/* Horizontal divider: ensure it spans full body width, not just section */
+.tcc-section-second {
+  border-top: 1pt solid #333;
+  margin-top: 6pt;
+  padding-top: 20pt;
+  margin-left: -14pt;       /* counteract body.tcc padding */
+  margin-right: -14pt;
+  padding-left: 22pt;       /* restore inner padding */
+  padding-right: 22pt;
+}
+
+/* Vertical divider extends deeper into non-retirement */
+.tcc-section-divided::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: -60pt;        /* was -20pt — extends down toward trust bubble */
+  width: 1pt;
+  background: #000;
+  z-index: 0;
 }
