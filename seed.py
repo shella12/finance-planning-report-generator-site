@@ -29,16 +29,18 @@ def seed():
                 label, is_married,
                 client1_name, client1_dob, client1_ssn_last4,
                 client2_name, client2_dob, client2_ssn_last4,
-                monthly_salary, monthly_expense_budget,
+                monthly_salary, client1_salary, client2_salary,
+                monthly_expense_budget,
                 trust_property_address
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 "The Example Family",
                 1,
                 "Alex Example", "1978-04-12", "1234",
                 "Jordan Example", "1980-09-03", "5678",
-                15000, 12000,
+                15000, 8000, 7000,
+                12000,
                 "742 Evergreen Terrace, Atlanta, GA",
             ),
         )

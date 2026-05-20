@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS clients (
     client2_ssn_last4 TEXT,
 
     monthly_salary REAL NOT NULL DEFAULT 0,
+    client1_salary REAL NOT NULL DEFAULT 0,
+    client2_salary REAL NOT NULL DEFAULT 0,
     monthly_expense_budget REAL NOT NULL DEFAULT 0,
     private_reserve_target_override REAL,
 

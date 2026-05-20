@@ -335,6 +335,8 @@ def register_routes(app: Flask):
 def save_client(client_id: int | None):
     f = request.form
     is_married = 1 if f.get("is_married") == "on" else 0
+    client1_salary = parse_float(f.get("client1_salary")) or 0
+    client2_salary = (parse_float(f.get("client2_salary")) or 0) if is_married else 0
     fields = dict(
         label=f.get("label", "").strip() or "Untitled client",
         is_married=is_married,
@@ -344,7 +346,9 @@ def save_client(client_id: int | None):
         client2_name=f.get("client2_name", "").strip() or None if is_married else None,
         client2_dob=f.get("client2_dob", "").strip() or None if is_married else None,
         client2_ssn_last4=(f.get("client2_ssn_last4", "").strip() or None) if is_married else None,
-        monthly_salary=parse_float(f.get("monthly_salary")) or 0,
+        monthly_salary=client1_salary + client2_salary,
+        client1_salary=client1_salary,
+        client2_salary=client2_salary,
         monthly_expense_budget=parse_float(f.get("monthly_expense_budget")) or 0,
         private_reserve_target_override=parse_float(f.get("private_reserve_target_override")),
         trust_property_address=f.get("trust_property_address", "").strip() or None,

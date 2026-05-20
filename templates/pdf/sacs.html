@@ -20,20 +20,51 @@
   <text x="40"  y="50" font-size="36" fill="#16a34a">$</text>
   <text x="660" y="50" font-size="28" fill="#6b7280">🏢</text>
 
-  <!-- INFLOW bubble (green, top-left) -->
-  <circle cx="180" cy="220" r="110" fill="#16a34a"/>
-  <text class="sacs-bubble-label"  x="180" y="195">INFLOW</text>
-  <text class="sacs-bubble-amount" x="180" y="240">{{ "${:,.0f}".format(sacs.inflow) }}</text>
-  <text class="sacs-bubble-sub"    x="180" y="265">/month</text>
-  <text class="floor-label" x="180" y="345">$1,000 floor</text>
+  <!-- Salary labels under $ icon, colored lime green (#32CD32) -->
+  {% if client.is_married %}
+  <text x="40" y="82"  fill="#32CD32" font-size="11" font-weight="700">${{ "{:,.0f}".format(client.client1_salary or 0) }} - {{ client.client1_name }}</text>
+  <text x="40" y="100" fill="#32CD32" font-size="11" font-weight="700">${{ "{:,.0f}".format(client.client2_salary or 0) }} - {{ client.client2_name }}</text>
+  {% else %}
+  <text x="40" y="82"  fill="#32CD32" font-size="11" font-weight="700">${{ "{:,.0f}".format(client.client1_salary or client.monthly_salary or 0) }} - {{ client.client1_name }}</text>
+  {% endif %}
 
-  <!-- OUTFLOW bubble (red, top-right) -->
-  <circle cx="540" cy="220" r="110" fill="#dc2626"/>
-  <text class="sacs-bubble-label"  x="540" y="195">OUTFLOW</text>
-  <text class="sacs-bubble-amount" x="540" y="240">{{ "${:,.0f}".format(sacs.outflow) }}</text>
-  <text class="sacs-bubble-sub"    x="540" y="265">/month</text>
-  <text class="floor-label" x="540" y="345">$1,000 floor</text>
+  <!-- Fat filled Paint-style green arrow from salary labels to INFLOW bubble -->
+  <g transform="translate(65 120) rotate(55)">
+    <polygon points="0,-9 36,-9 36,-18 60,0 36,18 36,9 0,9" fill="#32CD32" stroke="black"
+    stroke-width="2"/>
+  </g>
 
+  <!-- X = Monthly Expenses label under building icon -->
+  <text x="660" y="80"  fill="#333" font-size="11" font-weight="600" text-anchor="end">X = Monthly</text>
+  <text x="660" y="95"  fill="#333" font-size="11" font-weight="600" text-anchor="end">Expenses</text>
+
+  <!-- Thin curved black arrow from X label to OUTFLOW bubble (right side) -->
+  <defs>
+    <marker id="arrow-black" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+  </defs>
+  <path d="M 660 105 L 660 200 Q 660 220 645 220" stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#arrow-black)"/>
+
+ <!-- INFLOW bubble (green, top-left) -->
+<circle cx="180" cy="250" r="110" fill="#16a34a" stroke="#000000" stroke-width="1.5"/>
+<!-- White square behind INFLOW label, green text -->
+<rect x="105" y="250" width="150" height="28" fill="white"/>
+<text class="sacs-bubble-label" x="145" y="225" style="fill:#ffffff;">INFLOW</text>
+<text class="sacs-bubble-amount" x="145" y="270" style="fill:#16a34a;">{{ "${:,.0f}".format(sacs.inflow) }}</text>
+<!-- Chord + floor inside circle, stuck to bottom -->
+<line x1="105" y1="330" x2="255" y2="330" stroke="black" stroke-width="1.5"/>
+<text x="180" y="350" fill="black" font-size="9" text-anchor="middle" font-weight="600">$1,000 floor</text>
+
+<!-- OUTFLOW bubble (red, top-right) -->
+<circle cx="540" cy="250" r="110" fill="#dc2626" stroke="#000000" stroke-width="1.5"/>
+<!-- White square behind OUTFLOW label, red text -->
+<rect x="465" y="250" width="150" height="28" fill="white"/>
+<text class="sacs-bubble-label" x="505" y="225" style="fill:#ffffff;">OUTFLOW</text>
+<text class="sacs-bubble-amount" x="505" y="270" style="fill:#dc2626;">{{ "${:,.0f}".format(sacs.outflow) }}</text>
+<!-- Chord + floor inside circle, stuck to bottom -->
+<line x1="465" y1="330" x2="615" y2="330" stroke="black" stroke-width="1.5"/>
+<text x="540" y="350" fill="black" font-size="9" text-anchor="middle" font-weight="600">$1,000 floor</text>
   <!-- Inflow → Outflow arrow (red with X) -->
   <defs>
     <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
@@ -43,20 +74,24 @@
       <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
     </marker>
   </defs>
-  <line x1="295" y1="220" x2="425" y2="220" stroke="#dc2626" stroke-width="3" marker-end="url(#arrow-red)"/>
-  <text x="360" y="207" class="sacs-arrow-label">−{{ "${:,.0f}".format(sacs.outflow) }}/mo</text>
-  <line x1="350" y1="200" x2="370" y2="240" stroke="#dc2626" stroke-width="2"/>
-  <line x1="370" y1="200" x2="350" y2="240" stroke="#dc2626" stroke-width="2"/>
+
+  <!-- Fat outlined red arrow with "X = amount/mo" inside -->
+<polygon points="295,205 405,205 405,193 430,220 405,247 405,235 295,235"
+fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="350" y="224" text-anchor="middle"
+fill="#dc2626" font-size="11" font-weight="700">X = {{ "${:,.0f}".format(sacs.outflow) }}/mo</text>
 
   <!-- Inflow → Private Reserve (blue, excess) -->
-  <line x1="180" y1="335" x2="360" y2="490" stroke="#1d4ed8" stroke-width="3" marker-end="url(#arrow-blue)"/>
-  <text x="240" y="430" class="sacs-arrow-label-blue">+{{ "${:,.0f}".format(sacs.excess) }}/mo excess</text>
+<path d="M 110 350 L 150 350 L 150 535 L 240 535 L 240 520 L 265 555 L 240 590 L 240 575 L 110 575 Z"
+      fill="none" stroke="#1E90FF" stroke-width="2.5" stroke-linejoin="round"/>
+<text x="175" y="559" text-anchor="middle"
+      fill="#1E90FF" font-size="11" font-weight="700">+{{ "${:,.0f}".format(sacs.excess) }}/mo excess</text>
 
   <!-- PRIVATE RESERVE bubble (blue, center-bottom) -->
   <circle cx="360" cy="555" r="95" fill="#1d4ed8"/>
-  <text class="sacs-bubble-label"  x="360" y="540">PRIVATE</text>
-  <text class="sacs-bubble-label"  x="360" y="560">RESERVE</text>
-  <text class="sacs-bubble-amount" x="360" y="595" font-size="14pt">{{ "${:,.0f}".format(sacs.private_reserve_balance) }}</text>
+  <text class="sacs-bubble-label"  x="325" y="540">PRIVATE</text>
+  <text class="sacs-bubble-label"  x="325" y="560">RESERVE</text>
+  <text class="sacs-bubble-amount" x="325" y="595" font-size="14pt">{{ "${:,.0f}".format(sacs.private_reserve_balance) }}</text>
 
   <!-- "MONTHLY CASHFLOW" caption -->
   <text x="360" y="685" text-anchor="middle" font-size="11pt" fill="#555" letter-spacing="2">MONTHLY CASHFLOW</text>
@@ -75,9 +110,9 @@
 <svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg">
   <!-- Private Reserve / FICA bubble (light blue, left) -->
   <circle cx="220" cy="180" r="115" fill="#60a5fa"/>
-  <text class="sacs-bubble-label"  x="220" y="155">PRIVATE</text>
-  <text class="sacs-bubble-label"  x="220" y="175">RESERVE</text>
-  <text class="sacs-bubble-amount" x="220" y="215" font-size="16pt">{{ "${:,.0f}".format(sacs.private_reserve_balance) }}</text>
+  <text class="sacs-bubble-label"  x="185" y="155">PRIVATE</text>
+  <text class="sacs-bubble-label"  x="185" y="175">RESERVE</text>
+  <text class="sacs-bubble-amount" x="185" y="215" font-size="16pt">{{ "${:,.0f}".format(sacs.private_reserve_balance) }}</text>
 
   <!-- Arrow → Investment -->
   <line x1="340" y1="180" x2="380" y2="180" stroke="#1d4ed8" stroke-width="3" marker-end="url(#arrow-blue2)"/>
@@ -89,10 +124,10 @@
 
   <!-- Investment account bubble (dark navy, right) -->
   <circle cx="500" cy="180" r="115" fill="#1e3a8a"/>
-  <text class="sacs-bubble-label"  x="500" y="155">INVESTMENT</text>
-  <text class="sacs-bubble-label"  x="500" y="175">ACCOUNT</text>
-  <text class="sacs-bubble-amount" x="500" y="215" font-size="16pt">{{ "${:,.0f}".format(sacs.investment_account_balance) }}</text>
-  <text class="sacs-bubble-sub"    x="500" y="240">(Schwab)</text>
+  <text class="sacs-bubble-label"  x="450" y="155">INVESTMENT</text>
+  <text class="sacs-bubble-label"  x="465" y="175">ACCOUNT</text>
+  <text class="sacs-bubble-amount" x="465" y="215" font-size="16pt">{{ "${:,.0f}".format(sacs.investment_account_balance) }}</text>
+  <text class="sacs-bubble-sub"    x="475" y="240">(Schwab)</text>
 </svg>
 
 <div class="target-box">

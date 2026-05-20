@@ -33,7 +33,9 @@
     {% endif %}
     <div>
       <h3>Static financials</h3>
-      <p>Monthly salary (after tax): <strong>{{ client.monthly_salary | usd }}</strong><br>
+      <p>Client 1 take-home: <strong>{{ client.client1_salary | usd }}</strong><br>
+         {% if client.is_married %}Client 2 take-home: <strong>{{ client.client2_salary | usd }}</strong><br>{% endif %}
+         <em>Combined Inflow: <strong>{{ client.monthly_salary | usd }}</strong></em><br>
          Monthly expense budget (Outflow): <strong>{{ client.monthly_expense_budget | usd }}</strong><br>
          Private Reserve target:
          {% if client.private_reserve_target_override %}<strong>{{ client.private_reserve_target_override | usd }}</strong> (override){% else %}
