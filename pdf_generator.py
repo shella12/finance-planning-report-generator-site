@@ -10,6 +10,7 @@ from calculations import calc_age
 APP_DIR = Path(__file__).parent
 TEMPLATES_DIR = APP_DIR / "templates"
 PDF_CSS_PATH = APP_DIR / "static" / "pdf.css"
+PIGGY_PATH = APP_DIR / "static" / "piggy_image.png"
 
 
 _env = Environment(
@@ -29,5 +30,6 @@ def render(kind: str, *, client, report, sacs, tcc, deductibles) -> bytes:
         deductibles=deductibles,
         calc_age=calc_age,
         pdf_css_path=PDF_CSS_PATH.as_uri(),
+        piggy_path=PIGGY_PATH.as_uri() if PIGGY_PATH.exists() else "",
     )
     return HTML(string=html_str, base_url=str(APP_DIR)).write_pdf()

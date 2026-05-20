@@ -479,4 +479,7 @@ def save_report(client_id: int, report_id: int | None):
 
 
 if __name__ == "__main__":
-    create_app().run(host="127.0.0.1", port=5050, debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5050))
+    debug = os.environ.get("FLASK_DEBUG") == "1"
+    create_app().run(host="0.0.0.0", port=port, debug=debug)
