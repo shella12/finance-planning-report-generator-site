@@ -17,49 +17,70 @@
   </div>
 </div>
 
-<!-- =========== Row 2: C1 total | C1 oval | center stack | C2 oval | C2 total =========== -->
-<div class="tcc-top-row">
-  <div class="tcc-summary-box">
-    <div class="lbl">{{ client.client1_name }} Retirement Only</div>
-    <div class="val">{{ "${:,.2f}".format(tcc.client1_retirement_total) }}</div>
-  </div>
-
-  <div class="tcc-client-oval">
-    <div class="name">{{ client.client1_name }}</div>
-    <div class="meta">
-      Age {{ calc_age(client.client1_dob, report.report_date) or '—' }}<br>
-      DOB {{ client.client1_dob }}<br>
-      SSN ●●●-●●-{{ client.client1_ssn_last4 or '----' }}
-    </div>
-  </div>
-
-  <div class="tcc-top-center-stack">
-    <div class="tcc-summary-box">
-      <div class="lbl">RETIREMENT TOTAL</div>
-      <div class="val">{{ "${:,.2f}".format(tcc.client1_retirement_total + (tcc.client2_retirement_total if client.is_married else 0)) }}</div>
-    </div>
-    <div class="tcc-summary-box tcc-summary-mid" id="liab-anchor">
-      <div class="lbl" id="lbl">Liabilities</div>
-      <div class="val">{{ "${:,.2f}".format(tcc.liabilities_total) }}</div>
-      <div class="acct-date">a/o {{ rdate_short }}</div>
-    </div>
-  </div>
-
-  {% if client.is_married %}
-    <div class="tcc-client-oval">
-      <div class="name">{{ client.client2_name }}</div>
-      <div class="meta">
-        Age {{ calc_age(client.client2_dob, report.report_date) or '—' }}<br>
-        DOB {{ client.client2_dob }}<br>
-        SSN ●●●-●●-{{ client.client2_ssn_last4 or '----' }}
+<!-- =========== Row 2: TABLE layout for top row ===========
+     A 3-column table with table-layout: fixed gives bulletproof centering.
+     The center column is exactly 105pt, side columns share the rest equally,
+     so the center column is GUARANTEED to be at the row's horizontal center
+     (which equals the page content center). The vertical divider in the
+     retirement section is anchored at 50% and lines up exactly. -->
+<table class="tcc-top-table">
+  <tr>
+    <td class="td-side td-side-left">
+      <div class="tcc-side-inner">
+        <div class="tcc-summary-box">
+          <div class="lbl">{{ client.client1_name }} Retirement Only</div>
+          <div class="val">{{ "${:,.2f}".format(tcc.client1_retirement_total) }}</div>
+        </div>
+        <div class="tcc-client-oval">
+          <div class="name">{{ client.client1_name }}</div>
+          <div class="meta">
+            Age {{ calc_age(client.client1_dob, report.report_date) or '—' }}<br>
+            DOB {{ client.client1_dob }}<br>
+            SSN ●●●-●●-{{ client.client1_ssn_last4 or '----' }}
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="tcc-summary-box">
-      <div class="lbl">{{ client.client2_name }} Retirement Only</div>
-      <div class="val">{{ "${:,.2f}".format(tcc.client2_retirement_total) }}</div>
-    </div>
-  {% endif %}
-</div>
+    </td>
+
+    <td class="td-center">
+      <div class="tcc-top-center-stack">
+        <div class="tcc-summary-box">
+          <div class="lbl">GRAND TOTAL</div>
+          <div class="val">{{ "${:,.2f}".format(
+            tcc.client1_retirement_total
+            + (tcc.client2_retirement_total if client.is_married else 0)
+            + tcc.non_retirement_total
+            + (tcc.trust_value or 0)
+          ) }}</div>
+        </div>
+        <div class="tcc-summary-box tcc-summary-mid">
+          <div class="lbl">Liabilities</div>
+          <div class="val">{{ "${:,.2f}".format(tcc.liabilities_total) }}</div>
+          <div class="acct-date">a/o {{ rdate_short }}</div>
+        </div>
+      </div>
+    </td>
+
+    <td class="td-side td-side-right">
+      {% if client.is_married %}
+      <div class="tcc-side-inner">
+        <div class="tcc-client-oval">
+          <div class="name">{{ client.client2_name }}</div>
+          <div class="meta">
+            Age {{ calc_age(client.client2_dob, report.report_date) or '—' }}<br>
+            DOB {{ client.client2_dob }}<br>
+            SSN ●●●-●●-{{ client.client2_ssn_last4 or '----' }}
+          </div>
+        </div>
+        <div class="tcc-summary-box">
+          <div class="lbl">{{ client.client2_name }} Retirement Only</div>
+          <div class="val">{{ "${:,.2f}".format(tcc.client2_retirement_total) }}</div>
+        </div>
+      </div>
+      {% endif %}
+    </td>
+  </tr>
+</table>
 
 {% macro bubble(b, short_date) -%}
 <div class="tcc-bubble-wrap">
@@ -140,8 +161,8 @@
   </div>
 
   <div class="tcc-summary-box tcc-bottom-total">
-    <div class="lbl">NET WORTH</div>
-    <div class="val">{{ "${:,.2f}".format(tcc.grand_total_net_worth) }}</div>
+    <div class="lbl">NON RETIREMENT TOTAL</div>
+    <div class="val">{{ "${:,.2f}".format(tcc.non_retirement_total) }}</div>
   </div>
 
   <div class="tcc-stale-note">* Indicates we do not have up to date information</div>

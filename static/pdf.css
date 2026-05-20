@@ -52,7 +52,7 @@ h1.report-title { font-size: 18pt; margin: 0; text-align: center; color: #1d4ed8
 /* ============================================================ */
 /* ============== TCC (Total Client Chart) ==================== */
 /* ============================================================ */
-body.tcc { font-size: 8pt; padding: 0 14pt; }
+body.tcc { font-size: 8pt; padding: 0; }
 
 /* ---------- Row 1: NAME/DATE only ---------- */
 .tcc-name-row {
@@ -63,26 +63,12 @@ body.tcc { font-size: 8pt; padding: 0 14pt; }
 .tcc-meta .val { border-bottom: 0.5pt solid #555; padding: 0 4pt 1pt; min-width: 80pt; display: inline-block; }
 .tcc-meta div { margin-bottom: 3pt; }
 
-/* ---------- Row 2: 5 elements in one centered row ---------- */
-.tcc-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8pt;
-  margin-bottom: 6pt;
-}
-
-/* Grey summary boxes (per-client totals + net worth at bottom) */
-/* .tcc-summary-box {
-  background: #4e4e4e;
-  border: 0.5pt solid #000000;
-  padding: 5pt 6pt;
-  text-align: center;
-  font-size: 8pt;
-  min-width: 88pt;
-  max-width: 110pt;
-  flex-shrink: 0;
-} */
+/* ---------- Row 2: 5 elements in one centered row (CSS Grid) ----------
+   Grid pattern: 1fr | 1fr | auto | 1fr | 1fr
+   The two side columns flex equally on left and right, so the center
+   column (auto, sized to its content) sits at the EXACT page center.
+   This matters because the vertical divider in the retirement section
+   sits at left: 50% and needs to drop directly below the Liabilities box. */
 .tcc-summary-box .lbl { color: #ffffff; font-size: 7.5pt; font-weight: 600; line-height: 1.15; }
 .tcc-summary-box .val { font-weight: 700; font-size: 10pt; color: #fff; }
 
@@ -98,62 +84,19 @@ body.tcc { font-size: 8pt; padding: 0 14pt; }
 .tcc-summary-box.tcc-summary-mid .val { font-size: 9pt; }
 .tcc-summary-box.tcc-summary-mid .acct-date { font-size: 6pt; color: #555; }
 
-/* Center stack: Retirement Total + Liabilities, stacked vertically, wider */
-
+/* Center stack: Retirement Total + Liabilities, each child fills the stack width */
 .tcc-top-center-stack .tcc-summary-box {
   max-width: none;
   min-width: 0;
   width: 100%;
 }
 
-/* Client ovals — light sky blue */
-
+/* Client ovals — text styling (base shape defined later) */
 .tcc-client-oval .name { font-weight: 700; font-size: 8.5pt; margin: 1pt 0 1pt; }
 .tcc-client-oval .meta { font-size: 6pt; line-height: 1.25; }
 
-/* ---------- Section wrapper with horizontal corner labels ---------- */
-.tcc-section {
-  position: relative;
-  padding: 24pt 8pt 8pt;
-  page-break-inside: avoid;
-}
-
-/* Horizontal divider between retirement and non-retirement — full width, thicker */
-.tcc-section-second {
-  border-top: 1pt solid #333;
-  margin-top: 6pt;
-  padding-top: 16pt;
-}
-
-/* Section labels sit horizontally in the corners */
-.tcc-section-label {
-  position: absolute;
-  top: 8pt;
-  font-size: 9pt;
-  letter-spacing: 1.5pt;
-  color: #c2a35a;
-  font-weight: 700;
-  white-space: nowrap;
-  transform: none;
-}
-.tcc-section-label.left { left: 0; }
-.tcc-section-label.right { right: 0; }
-
-/* Vertical divider line for retirement section (married),
-   extending slightly into the non-retirement section */
-.tcc-section-divided {
-  position: relative;
-}
-.tcc-section-divided::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: -20pt;
-  width: 1pt;
-  background: #000;
-  z-index: 0;
-}
+/* Anchor for the vertical divider pseudo-element */
+.tcc-section-divided { position: relative; }
 
 /* ---------- 2-column grid for divided retirement ---------- */
 .tcc-grid-2col {
@@ -290,29 +233,21 @@ body.tcc { font-size: 8pt; padding: 0 14pt; }
   text-align: right;
 }
 
-/* Center stack: narrower so the full row actually fits */
-.tcc-top-center-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 3pt;
-  align-items: stretch;
-  flex-shrink: 0;
-  width: 150pt;          /* was 200pt */
-}
-
-/* Slightly smaller ovals and tighter grey boxes for breathing room */
 .tcc-client-oval {
   background: #87CEFA;
   color: white;
   border: 1pt solid #000;
   border-radius: 50%;
-  width: 88pt;           /* was 95pt */
-  height: 56pt;          /* was 60pt */
-  padding: 4pt 6pt;
+  width: 96pt;
+  height: 56pt;
+  padding: 10pt 6pt 4pt;     /* top padding centers text vertically */
   text-align: center;
   line-height: 1.15;
   flex-shrink: 0;
+  display: block;
+  overflow: hidden;
 }
+.tcc-client-oval .name { white-space: nowrap; }
 
 .tcc-summary-box {
   background: #4e4e4e;
@@ -320,29 +255,51 @@ body.tcc { font-size: 8pt; padding: 0 14pt; }
   padding: 5pt 6pt;
   text-align: center;
   font-size: 8pt;
-  min-width: 80pt;       /* was 88pt */
-  max-width: 100pt;      /* was 110pt */
+  width: 88pt;
   flex-shrink: 0;
 }
 
-/* More breathing room around center stack — push ovals away */
-.tcc-top-row {
+/* Top row: TABLE layout with table-layout: fixed.
+   Center column is exactly 105pt, sides share remaining width equally.
+   The center column is therefore at the EXACT row center, and because
+   the table fills body content width, that equals page center.
+   The vertical divider in the retirement section is anchored at 50% and
+   lines up exactly with the center column. */
+.tcc-top-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin-bottom: 0;
+}
+.tcc-top-table td {
+  vertical-align: middle;
+  padding: 0;
+}
+.tcc-top-table .td-center {
+  width: 105pt;
+  text-align: center;
+}
+.tcc-top-table .td-side {
+  /* Sides share remaining width equally (table-layout: fixed) */
+}
+.tcc-side-inner {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12pt;            /* was 8pt — more space between elements */
-  margin-bottom: 6pt;
+  gap: 4pt;
 }
+.td-side-left  .tcc-side-inner { justify-content: flex-end; }
+.td-side-right .tcc-side-inner { justify-content: flex-start; }
 
-/* Center stack narrower so ovals don't crowd it */
 .tcc-top-center-stack {
+  width: 105pt;
+  margin: 0 auto;          /* center within td */
   display: flex;
   flex-direction: column;
   gap: 3pt;
-  align-items: stretch;
-  flex-shrink: 0;
-  width: 130pt;         /* was 150pt — gives ovals room */
 }
+
+/* (legacy .tcc-top-center-stack rule below removed — see absolute-positioned
+   version above in the top-row section.) */
 
 /* RETIREMENT labels: pull them down + away from bubbles */
 .tcc-section-label {
@@ -377,14 +334,19 @@ body.tcc { font-size: 8pt; padding: 0 14pt; }
   padding-right: 22pt;
 }
 
-/* Vertical divider extends deeper into non-retirement */
+/* Vertical divider: anchored to drop directly below the Liabilities box.
+   The center-stack-column in the table above renders ~18pt left of the
+   section's true 50% due to WeasyPrint's table-layout calculation
+   interacting with @page margins. The transform offset re-aligns the
+   line to sit beneath the visible center stack. */
 .tcc-section-divided::before {
   content: "";
   position: absolute;
   left: 50%;
   top: 0;
-  bottom: -60pt;        /* was -20pt — extends down toward trust bubble */
+  bottom: 0;
   width: 1pt;
   background: #000;
   z-index: 0;
+  transform: translateX(-18pt);
 }
