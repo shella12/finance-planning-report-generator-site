@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Report for {{ client.label }} · AW Report Portal{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('client_detail', client_id=client.id) }}">← {{ client.label }}</a></div>
+<h1>{{ "Edit report" if report else "Generate report" }} — {{ client.label }}</h1>
+
+{% set deductible_total = deductibles | sum(attribute='amount') %}
+
+<form method="post" class="form" id="report-form">
+  <fieldset>
+    <legend>Report date</legend>
+    <label>Date of meeting / snapshot
+      <input name="report_date" type="date" required value="{{ today }}">
+    </label>
+    {% if last_report %}
+      <p class="hint">Last report: <a href="{{ url_for('report_view', report_id=last_report.id) }}">{{ last_report.report_date }}</a>. Click any “use last” chip to copy that value.</p>
+    {% endif %}
+  </fieldset>
+
+  <fieldset>
+    <legend>SACS — Cashflow</legend>
+    <div class="grid-2">
+      <label>Inflow (monthly, after-tax salary)
+        <input name="inflow_monthly" type="number" step="0.01" min="0" required
+               value="{{ report.inflow_monthly if report else client.monthly_salary }}">
+        {% if last_report and last_report.inflow_monthly is not none %}
+          <button type="button" class="chip" onclick="setVal('inflow_monthly', {{ last_report.inflow_monthly }})">use last: {{ last_report.inflow_monthly | usd0 }}</button>
+        {% endif %}
+      </label>
+      <label>Outflow (monthly transfer to spending account)
+        <input name="outflow_monthly" type="number" step="0.01" min="0" required
+               value="{{ report.outflow_monthly if report else client.monthly_expense_budget }}">
+        {% if last_report and last_report.outflow_monthly is not none %}
+          <button type="button" class="chip" onclick="setVal('outflow_monthly', {{ last_report.outflow_monthly }})">use last: {{ last_report.outflow_monthly | usd0 }}</button>
+        {% endif %}
+      </label>
+      <label>Private Reserve balance (Pinnacle high-yield)
+        <input name="private_reserve_balance" type="number" step="0.01" min="0" required
+               value="{{ report.private_reserve_balance if report else '' }}">
+        {% if last_report and last_report.private_reserve_balance is not none %}
+          <button type="button" class="chip" onclick="setVal('private_reserve_balance', {{ last_report.private_reserve_balance }})">use last: {{ last_report.private_reserve_balance | usd0 }}</button>
+        {% endif %}
+      </label>
+      <label>Investment Account balance (Schwab)
+        <input name="investment_account_balance" type="number" step="0.01" min="0" required
+               value="{{ report.investment_account_balance if report else '' }}">
+        {% if last_report and last_report.investment_account_balance is not none %}
+          <button type="button" class="chip" onclick="setVal('investment_account_balance', {{ last_report.investment_account_balance }})">use last: {{ last_report.investment_account_balance | usd0 }}</button>
+        {% endif %}
+      </label>
+    </div>
+    <p class="readonly">
+      Computed excess (Inflow − Outflow): <strong id="calc-excess">—</strong> ·
+      Private Reserve target ({% if client.private_reserve_target_override %}override{% else %}6×expenses + ${{ "%.0f" | format(deductible_total) }} deductibles{% endif %}):
+      <strong id="calc-target">{{ (client.private_reserve_target_override or (6 * client.monthly_expense_budget + deductible_total)) | usd0 }}</strong>
+    </p>
+  </fieldset>
+
+  <fieldset>
+    <legend>TCC — Account balances</legend>
+    <table class="balances">
+      <thead>
+        <tr><th>Section</th><th>Owner</th><th>Account</th><th>Balance</th><th>Cash balance <span class="hint">(of balance, for investment accts)</span></th></tr>
+      </thead>
+      <tbody>
+        {% for a in accounts if a.category in ('retirement', 'non_retirement') %}
+          {% set b = balances.get(a.id, {}) %}
+          {% set lb = last_balances.get(a.id, {}) %}
+          <tr data-account-id="{{ a.id }}" data-category="{{ a.category }}" data-owner="{{ a.owner }}">
+            <td><span class="badge">{{ 'Ret' if a.category=='retirement' else 'Non-ret' }}</span></td>
+            <td>{{ a.owner | replace('client','Client ') | title }}</td>
+            <td>{{ a.account_type }}{% if a.nickname %} — {{ a.nickname }}{% endif %}
+                {% if a.account_number_last4 %}<span class="hint">####{{ a.account_number_last4 }}</span>{% endif %}</td>
+            <td>
+              <input name="bal_{{ a.id }}" type="number" step="0.01" min="0" required
+                     class="bal-input"
+                     value="{{ b.balance if b.balance is not none else '' }}">
+              {% if lb.balance is not none %}
+                <button type="button" class="chip" onclick="setBal({{ a.id }}, 'balance', {{ lb.balance }})">use last: {{ lb.balance | usd0 }}</button>
+              {% endif %}
+            </td>
+            <td>
+              {% if a.is_investment %}
+                <input name="cash_{{ a.id }}" type="number" step="0.01" min="0"
+                       value="{{ b.cash_balance if b.cash_balance is not none else '' }}">
+                {% if lb.cash_balance is not none %}
+                  <button type="button" class="chip" onclick="setBal({{ a.id }}, 'cash', {{ lb.cash_balance }})">use last: {{ lb.cash_balance | usd0 }}</button>
+                {% endif %}
+              {% else %}<span class="hint">—</span>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </fieldset>
+
+  {% set liabilities = accounts | selectattr('category', 'equalto', 'liability') | list %}
+  {% if liabilities %}
+  <fieldset>
+    <legend>Liabilities</legend>
+    <table class="balances">
+      <thead><tr><th>Type</th><th>Rate</th><th>Balance</th></tr></thead>
+      <tbody>
+        {% for a in liabilities %}
+          {% set b = balances.get(a.id, {}) %}
+          {% set lb = last_balances.get(a.id, {}) %}
+          <tr data-account-id="{{ a.id }}" data-category="liability">
+            <td>{{ a.account_type }}{% if a.nickname %} — {{ a.nickname }}{% endif %}</td>
+            <td>{{ a.interest_rate | pct }}</td>
+            <td>
+              <input name="bal_{{ a.id }}" type="number" step="0.01" min="0" required
+                     class="bal-input"
+                     value="{{ b.balance if b.balance is not none else '' }}">
+              {% if lb.balance is not none %}
+                <button type="button" class="chip" onclick="setBal({{ a.id }}, 'balance', {{ lb.balance }})">use last: {{ lb.balance | usd0 }}</button>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </fieldset>
+  {% endif %}
+
+  <fieldset>
+    <legend>Trust</legend>
+    <label>Zillow Zestimate of primary residence
+      <input name="trust_zillow_value" type="number" step="0.01" min="0" required
+             value="{{ report.trust_zillow_value if report else '' }}">
+      {% if last_report and last_report.trust_zillow_value is not none %}
+        <button type="button" class="chip" onclick="setVal('trust_zillow_value', {{ last_report.trust_zillow_value }})">use last: {{ last_report.trust_zillow_value | usd0 }}</button>
+      {% endif %}
+    </label>
+    <p class="hint">Address: {{ client.trust_property_address or "(no address on file)" }}</p>
+  </fieldset>
+
+  <fieldset class="totals">
+    <legend>Live totals</legend>
+    <ul>
+      <li>Client 1 Retirement Total: <strong id="t-c1ret">—</strong></li>
+      {% if client.is_married %}<li>Client 2 Retirement Total: <strong id="t-c2ret">—</strong></li>{% endif %}
+      <li>Non-Retirement Total <span class="hint">(trust NOT included)</span>: <strong id="t-nonret">—</strong></li>
+      <li>Liabilities Total <span class="hint">(shown separately, NOT subtracted)</span>: <strong id="t-liab">—</strong></li>
+      <li>Trust value: <strong id="t-trust">—</strong></li>
+      <li class="grand">Grand Total Net Worth: <strong id="t-grand">—</strong></li>
+    </ul>
+  </fieldset>
+
+  <div class="form-actions">
+    <label class="inline"><input type="radio" name="status" value="draft" {% if not report or report.status=='draft' %}checked{% endif %}> Save as draft</label>
+    <label class="inline"><input type="radio" name="status" value="finalized" {% if report and report.status=='finalized' %}checked{% endif %}> Finalize</label>
+    <button type="submit" class="btn primary">Save report</button>
+    <a class="btn ghost" href="{{ url_for('client_detail', client_id=client.id) }}">Cancel</a>
+  </div>
+</form>
+
+<script>
+  function setVal(name, val) {
+    const el = document.querySelector(`[name="${name}"]`);
+    if (el) { el.value = val; recompute(); }
+  }
+  function setBal(accountId, kind, val) {
+    const prefix = kind === 'cash' ? 'cash_' : 'bal_';
+    const el = document.querySelector(`[name="${prefix}${accountId}"]`);
+    if (el) { el.value = val; recompute(); }
+  }
+  function n(name) { const el = document.querySelector(`[name="${name}"]`); return el ? parseFloat(el.value) || 0 : 0; }
+  function fmt(v) { return '$' + (v || 0).toLocaleString(undefined, { maximumFractionDigits: 0 }); }
+  function recompute() {
+    document.getElementById('calc-excess').textContent = fmt(n('inflow_monthly') - n('outflow_monthly'));
+    let c1ret = 0, c2ret = 0, nonret = 0, liab = 0;
+    document.querySelectorAll('tr[data-account-id]').forEach(tr => {
+      const id = tr.dataset.accountId, cat = tr.dataset.category, owner = tr.dataset.owner;
+      const bal = parseFloat((tr.querySelector(`[name="bal_${id}"]`) || {}).value) || 0;
+      if (cat === 'retirement' && owner === 'client1') c1ret += bal;
+      else if (cat === 'retirement' && owner === 'client2') c2ret += bal;
+      else if (cat === 'non_retirement') nonret += bal;
+      else if (cat === 'liability') liab += bal;
+    });
+    const trust = n('trust_zillow_value');
+    document.getElementById('t-c1ret').textContent = fmt(c1ret);
+    const c2el = document.getElementById('t-c2ret'); if (c2el) c2el.textContent = fmt(c2ret);
+    document.getElementById('t-nonret').textContent = fmt(nonret);
+    document.getElementById('t-liab').textContent = fmt(liab);
+    document.getElementById('t-trust').textContent = fmt(trust);
+    document.getElementById('t-grand').textContent = fmt(c1ret + c2ret + nonret + trust);
+  }
+  document.querySelectorAll('#report-form input').forEach(el => el.addEventListener('input', recompute));
+  recompute();
+</script>
+{% endblock %}

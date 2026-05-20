@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>SACS — {{ client.label }} — {{ report.report_date }}</title>
+<link rel="stylesheet" href="{{ pdf_css_path }}">
+</head><body>
+
+<div class="report-header">
+  <div class="left">Simple Automated Cashflow System</div>
+  <div class="right">{{ report.report_date }}</div>
+</div>
+
+<h1 class="report-title">SACS</h1>
+<div class="client-banner">{{ client.client1_name }}{% if client.is_married %} &amp; {{ client.client2_name }}{% endif %}</div>
+
+<!-- =================== PAGE 1: bubble diagram =================== -->
+<div class="sacs-page1">
+<svg viewBox="0 0 720 720" xmlns="http://www.w3.org/2000/svg">
+  <!-- top icons -->
+  <text x="40"  y="50" font-size="36" fill="#16a34a">$</text>
+  <text x="660" y="50" font-size="28" fill="#6b7280">🏢</text>
+
+  <!-- INFLOW bubble (green, top-left) -->
+  <circle cx="180" cy="220" r="110" fill="#16a34a"/>
+  <text class="sacs-bubble-label"  x="180" y="195">INFLOW</text>
+  <text class="sacs-bubble-amount" x="180" y="240">{{ "${:,.0f}".format(sacs.inflow) }}</text>
+  <text class="sacs-bubble-sub"    x="180" y="265">/month</text>
+  <text class="floor-label" x="180" y="345">$1,000 floor</text>
+
+  <!-- OUTFLOW bubble (red, top-right) -->
+  <circle cx="540" cy="220" r="110" fill="#dc2626"/>
+  <text class="sacs-bubble-label"  x="540" y="195">OUTFLOW</text>
+  <text class="sacs-bubble-amount" x="540" y="240">{{ "${:,.0f}".format(sacs.outflow) }}</text>
+  <text class="sacs-bubble-sub"    x="540" y="265">/month</text>
+  <text class="floor-label" x="540" y="345">$1,000 floor</text>
+
+  <!-- Inflow → Outflow arrow (red with X) -->
+  <defs>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
+    </marker>
+  </defs>
+  <line x1="295" y1="220" x2="425" y2="220" stroke="#dc2626" stroke-width="3" marker-end="url(#arrow-red)"/>
+  <text x="360" y="207" class="sacs-arrow-label">−{{ "${:,.0f}".format(sacs.outflow) }}/mo</text>
+  <line x1="350" y1="200" x2="370" y2="240" stroke="#dc2626" stroke-width="2"/>
+  <line x1="370" y1="200" x2="350" y2="240" stroke="#dc2626" stroke-width="2"/>
+
+  <!-- Inflow → Private Reserve (blue, excess) -->
+  <line x1="180" y1="335" x2="360" y2="490" stroke="#1d4ed8" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <text x="240" y="430" class="sacs-arrow-label-blue">+{{ "${:,.0f}".format(sacs.excess) }}/mo excess</text>
+
+  <!-- PRIVATE RESERVE bubble (blue, center-bottom) -->
+  <circle cx="360" cy="555" r="95" fill="#1d4ed8"/>
+  <text class="sacs-bubble-label"  x="360" y="540">PRIVATE</text>
+  <text class="sacs-bubble-label"  x="360" y="560">RESERVE</text>
+  <text class="sacs-bubble-amount" x="360" y="595" font-size="14pt">{{ "${:,.0f}".format(sacs.private_reserve_balance) }}</text>
+
+  <!-- "MONTHLY CASHFLOW" caption -->
+  <text x="360" y="685" text-anchor="middle" font-size="11pt" fill="#555" letter-spacing="2">MONTHLY CASHFLOW</text>
+</svg>
+</div>
+
+<!-- =================== PAGE 2: long-term cashflow =================== -->
+<div class="sacs-page2">
+<div class="report-header">
+  <div class="left">Simple Automated Cashflow System (page 2)</div>
+  <div class="right">{{ report.report_date }}</div>
+</div>
+<h1 class="report-title">Long-Term Cashflow</h1>
+<div class="section-subtitle">(Magnified Private Reserve Cashflow)</div>
+
+<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg">
+  <!-- Private Reserve / FICA bubble (light blue, left) -->
+  <circle cx="220" cy="180" r="115" fill="#60a5fa"/>
+  <text class="sacs-bubble-label"  x="220" y="155">PRIVATE</text>
+  <text class="sacs-bubble-label"  x="220" y="175">RESERVE</text>
+  <text class="sacs-bubble-amount" x="220" y="215" font-size="16pt">{{ "${:,.0f}".format(sacs.private_reserve_balance) }}</text>
+
+  <!-- Arrow → Investment -->
+  <line x1="340" y1="180" x2="380" y2="180" stroke="#1d4ed8" stroke-width="3" marker-end="url(#arrow-blue2)"/>
+  <defs>
+    <marker id="arrow-blue2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
+    </marker>
+  </defs>
+
+  <!-- Investment account bubble (dark navy, right) -->
+  <circle cx="500" cy="180" r="115" fill="#1e3a8a"/>
+  <text class="sacs-bubble-label"  x="500" y="155">INVESTMENT</text>
+  <text class="sacs-bubble-label"  x="500" y="175">ACCOUNT</text>
+  <text class="sacs-bubble-amount" x="500" y="215" font-size="16pt">{{ "${:,.0f}".format(sacs.investment_account_balance) }}</text>
+  <text class="sacs-bubble-sub"    x="500" y="240">(Schwab)</text>
+</svg>
+
+<div class="target-box">
+  <div class="label">Private Reserve Target</div>
+  <div class="value">{{ "${:,.0f}".format(sacs.private_reserve_target) }}</div>
+  <div class="target-formula">
+    {% if client.private_reserve_target_override %}
+      Manual override
+    {% else %}
+      = 6 × monthly expenses (${{ "{:,.0f}".format(client.monthly_expense_budget) }}) +
+      insurance deductibles
+      {% if deductibles %}({% for d in deductibles %}{{ d.label }} ${{ "{:,.0f}".format(d.amount) }}{% if not loop.last %} + {% endif %}{% endfor %}){% endif %}
+    {% endif %}
+  </div>
+  <div class="target-formula">
+    Progress to target: {{ "%.0f"|format(100 * (sacs.private_reserve_balance / sacs.private_reserve_target) if sacs.private_reserve_target else 0) }}%
+  </div>
+</div>
+
+</div>
+
+<div class="footnote">Generated by AW Client Report Portal · {{ report.report_date }}</div>
+</body></html>

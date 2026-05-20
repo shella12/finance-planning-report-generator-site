@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ client.label }} · AW Report Portal{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('index') }}">← All clients</a></div>
+<div class="page-head">
+  <h1>{{ client.label }}</h1>
+  <div class="page-head-actions">
+    <a class="btn primary" href="{{ url_for('report_new', client_id=client.id) }}">Generate report</a>
+    <a class="btn" href="{{ url_for('client_edit', client_id=client.id) }}">Edit client</a>
+    <form method="post" action="{{ url_for('client_delete', client_id=client.id) }}" style="display:inline"
+          onsubmit="return confirm('Delete this client and all their reports?')">
+      <button class="btn danger ghost" type="submit">Delete</button>
+    </form>
+  </div>
+</div>
+
+<section class="card">
+  <h2>Profile</h2>
+  <div class="profile-grid">
+    <div>
+      <h3>Client 1</h3>
+      <p>{{ client.client1_name }}<br>
+         DOB {{ client.client1_dob }} (age {{ calc_age(client.client1_dob) }})<br>
+         SSN ●●●-●●-{{ client.client1_ssn_last4 or '____' }}</p>
+    </div>
+    {% if client.is_married %}
+    <div>
+      <h3>Client 2</h3>
+      <p>{{ client.client2_name }}<br>
+         DOB {{ client.client2_dob }} (age {{ calc_age(client.client2_dob) }})<br>
+         SSN ●●●-●●-{{ client.client2_ssn_last4 or '____' }}</p>
+    </div>
+    {% endif %}
+    <div>
+      <h3>Static financials</h3>
+      <p>Monthly salary (after tax): <strong>{{ client.monthly_salary | usd }}</strong><br>
+         Monthly expense budget (Outflow): <strong>{{ client.monthly_expense_budget | usd }}</strong><br>
+         Private Reserve target:
+         {% if client.private_reserve_target_override %}<strong>{{ client.private_reserve_target_override | usd }}</strong> (override){% else %}
+           computed from 6× expenses + deductibles
+         {% endif %}
+      </p>
+    </div>
+    <div>
+      <h3>Trust</h3>
+      <p>{{ client.trust_property_address or "—" }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Accounts</h2>
+  {% set retirement = accounts | selectattr('category', 'equalto', 'retirement') | list %}
+  {% set non_retirement = accounts | selectattr('category', 'equalto', 'non_retirement') | list %}
+  {% set liabilities = accounts | selectattr('category', 'equalto', 'liability') | list %}
+
+  <h3>Retirement</h3>
+  {% if not retirement %}<p class="empty">None.</p>{% else %}
+  <ul class="account-list">
+    {% for a in retirement %}
+      <li><span class="badge">{{ a.owner | replace('client','Client ') | title }}</span>
+          {{ a.account_type }}{% if a.nickname %} — {{ a.nickname }}{% endif %}
+          {% if a.account_number_last4 %} (#####{{ a.account_number_last4 }}){% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <h3>Non-retirement</h3>
+  {% if not non_retirement %}<p class="empty">None.</p>{% else %}
+  <ul class="account-list">
+    {% for a in non_retirement %}
+      <li><span class="badge">{{ a.owner | replace('client','Client ') | title }}</span>
+          {{ a.account_type }}{% if a.nickname %} — {{ a.nickname }}{% endif %}
+          {% if a.account_number_last4 %} (#####{{ a.account_number_last4 }}){% endif %}
+          {% if a.is_investment %}<span class="tag">investment</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <h3>Liabilities</h3>
+  {% if not liabilities %}<p class="empty">None.</p>{% else %}
+  <ul class="account-list">
+    {% for a in liabilities %}
+      <li>{{ a.account_type }}{% if a.nickname %} — {{ a.nickname }}{% endif %}
+          {% if a.interest_rate %} @ {{ a.interest_rate | pct }}{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Insurance deductibles</h2>
+  {% if not deductibles %}<p class="empty">None.</p>{% else %}
+  <ul class="account-list">
+    {% for d in deductibles %}<li>{{ d.label }}: {{ d.amount | usd }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Quarterly reports</h2>
+  {% if not reports %}<p class="empty">No reports yet. <a href="{{ url_for('report_new', client_id=client.id) }}">Generate the first one →</a></p>
+  {% else %}
+  <table class="data">
+    <thead><tr><th>Date</th><th>Status</th><th>Created</th><th></th></tr></thead>
+    <tbody>
+      {% for r in reports %}
+        <tr>
+          <td><a href="{{ url_for('report_view', report_id=r.id) }}">{{ r.report_date }}</a></td>
+          <td><span class="badge">{{ r.status }}</span></td>
+          <td>{{ r.created_at[:10] if r.created_at else '' }}</td>
+          <td>
+            <a class="btn small" href="{{ url_for('report_view', report_id=r.id) }}">View</a>
+            <a class="btn small" href="{{ url_for('report_pdf', report_id=r.id, kind='sacs') }}">SACS PDF</a>
+            <a class="btn small" href="{{ url_for('report_pdf', report_id=r.id, kind='tcc') }}">TCC PDF</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}

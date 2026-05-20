@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Clients</h1>
+
+{% if not clients %}
+  <p class="empty">No clients yet. <a href="{{ url_for('client_new') }}">Add the first one →</a></p>
+{% else %}
+  <table class="data">
+    <thead>
+      <tr><th>Label</th><th>Type</th><th>Last report</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for c in clients %}
+        <tr>
+          <td><a href="{{ url_for('client_detail', client_id=c.id) }}">{{ c.label }}</a></td>
+          <td>{{ "Married" if c.is_married else "Single" }}</td>
+          <td>{{ c.last_report_date or "—" }}</td>
+          <td><a class="btn small" href="{{ url_for('report_new', client_id=c.id) }}">Generate report</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}

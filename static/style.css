@@ -1,0 +1,98 @@
+:root {
+  --blue: #2563eb;
+  --blue-dark: #1d4ed8;
+  --green: #16a34a;
+  --red: #dc2626;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-500: #6b7280;
+  --gray-700: #374151;
+  --gray-900: #111827;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+  color: var(--gray-900); background: var(--gray-50);
+  font-size: 14px; line-height: 1.5;
+}
+a { color: var(--blue); }
+
+header {
+  background: white; border-bottom: 1px solid var(--gray-200);
+  padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+}
+.brand { font-weight: 700; font-size: 16px; color: var(--gray-900); text-decoration: none; }
+nav a { margin-left: 16px; text-decoration: none; }
+
+main { max-width: 1100px; margin: 24px auto; padding: 0 24px; }
+.flash { background: #ecfeff; border: 1px solid #06b6d4; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; }
+.flash p { margin: 0; }
+.breadcrumb { margin-bottom: 12px; color: var(--gray-500); }
+.breadcrumb a { color: var(--gray-500); }
+h1 { font-size: 24px; margin: 0 0 16px; }
+h2 { font-size: 18px; margin: 0 0 12px; }
+h3 { font-size: 14px; margin: 12px 0 6px; color: var(--gray-700); }
+
+.empty { color: var(--gray-500); padding: 12px 0; }
+.hint { color: var(--gray-500); font-size: 12px; font-weight: normal; }
+
+.page-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.page-head-actions { display: flex; gap: 8px; }
+
+.card { background: white; border: 1px solid var(--gray-200); border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+.profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.profile-grid p { margin: 4px 0; color: var(--gray-700); }
+
+table.data, table.accounts, table.deductibles, table.balances { width: 100%; border-collapse: collapse; }
+table.data th, table.data td, table.balances th, table.balances td, table.accounts th, table.accounts td, table.deductibles th, table.deductibles td {
+  text-align: left; padding: 8px; border-bottom: 1px solid var(--gray-200); font-size: 13px;
+}
+table.data th, table.balances th, table.accounts th, table.deductibles th {
+  background: var(--gray-100); font-weight: 600; color: var(--gray-700);
+}
+table.balances input, table.accounts input, table.accounts select, table.deductibles input {
+  width: 100%; padding: 6px 8px; border: 1px solid var(--gray-300); border-radius: 4px; font-size: 13px;
+}
+table.accounts input.sub { margin-top: 4px; font-size: 12px; color: var(--gray-700); }
+
+.account-list { list-style: none; padding: 0; margin: 0; }
+.account-list li { padding: 6px 0; border-bottom: 1px solid var(--gray-100); }
+.badge { display: inline-block; padding: 2px 6px; background: var(--gray-100); color: var(--gray-700); border-radius: 4px; font-size: 11px; margin-right: 6px; }
+.tag { display: inline-block; padding: 1px 6px; background: #dbeafe; color: var(--blue-dark); border-radius: 4px; font-size: 11px; margin-left: 6px; }
+
+.form fieldset { border: 1px solid var(--gray-200); border-radius: 6px; padding: 16px; margin-bottom: 16px; background: white; }
+.form legend { font-weight: 600; padding: 0 6px; }
+.form label { display: block; margin-bottom: 12px; font-size: 13px; color: var(--gray-700); }
+.form label.inline { display: inline-block; margin-right: 12px; }
+.form input[type="text"], .form input[type="number"], .form input[type="date"], .form input:not([type]) {
+  display: block; width: 100%; padding: 8px; border: 1px solid var(--gray-300); border-radius: 4px;
+  font-size: 14px; margin-top: 4px;
+}
+.form .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form .readonly { background: var(--gray-100); padding: 8px 12px; border-radius: 4px; color: var(--gray-700); }
+.form-actions { display: flex; gap: 8px; align-items: center; }
+
+.btn { display: inline-block; padding: 6px 12px; border: 1px solid var(--gray-300); border-radius: 4px;
+       background: white; color: var(--gray-900); text-decoration: none; cursor: pointer; font-size: 13px;
+       font-family: inherit; }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: white; }
+.btn.primary:hover { background: var(--blue-dark); }
+.btn.danger { color: var(--red); border-color: var(--red); }
+.btn.danger.ghost { background: white; }
+.btn.ghost { background: transparent; border-color: transparent; }
+.btn.small { padding: 3px 8px; font-size: 12px; }
+
+.chip { background: var(--gray-100); border: 1px solid var(--gray-300); border-radius: 11px;
+        padding: 1px 8px; font-size: 11px; color: var(--gray-700); cursor: pointer; margin-top: 4px; }
+.chip:hover { background: var(--gray-200); }
+
+.totals ul { list-style: none; padding: 0; margin: 0; }
+.totals li { padding: 6px 0; border-bottom: 1px dashed var(--gray-200); display: flex; justify-content: space-between; }
+.totals li.grand { font-size: 16px; padding-top: 12px; border-top: 2px solid var(--gray-900); border-bottom: none; }
+
+.kv { list-style: none; padding: 0; margin: 0; }
+.kv li { padding: 4px 0; display: flex; justify-content: space-between; border-bottom: 1px dashed var(--gray-200); }
+.kv li.grand { font-size: 16px; padding-top: 8px; }

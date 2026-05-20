@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit" if client else "New" }} client · AW Report Portal{% endblock %}
+{% block content %}
+<h1>{{ "Edit client" if client else "New client" }}</h1>
+
+<form method="post" class="form">
+  <fieldset>
+    <legend>Identification</legend>
+    <label>Label (internal name)
+      <input name="label" required value="{{ client.label if client else '' }}">
+    </label>
+    <label class="inline">
+      <input type="checkbox" name="is_married" id="is_married"
+             {% if client and client.is_married %}checked{% endif %}>
+      Married couple
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Client 1</legend>
+    <label>Name <input name="client1_name" required value="{{ client.client1_name if client else '' }}"></label>
+    <label>Date of birth <input name="client1_dob" type="date" required value="{{ client.client1_dob if client else '' }}"></label>
+    <label>Last 4 of SSN <input name="client1_ssn_last4" maxlength="4" value="{{ client.client1_ssn_last4 if client else '' }}"></label>
+  </fieldset>
+
+  <fieldset id="client2_block" {% if not client or not client.is_married %}hidden{% endif %}>
+    <legend>Client 2</legend>
+    <label>Name <input name="client2_name" value="{{ client.client2_name if client else '' }}"></label>
+    <label>Date of birth <input name="client2_dob" type="date" value="{{ client.client2_dob if client else '' }}"></label>
+    <label>Last 4 of SSN <input name="client2_ssn_last4" maxlength="4" value="{{ client.client2_ssn_last4 if client else '' }}"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Static financials</legend>
+    <label>Monthly salary (after tax)
+      <input name="monthly_salary" type="number" step="0.01" min="0" value="{{ client.monthly_salary if client else '' }}">
+    </label>
+    <label>Agreed monthly expense budget (Outflow)
+      <input name="monthly_expense_budget" type="number" step="0.01" min="0" value="{{ client.monthly_expense_budget if client else '' }}">
+    </label>
+    <label>Private Reserve target override <span class="hint">(blank = 6 × expenses + deductibles)</span>
+      <input name="private_reserve_target_override" type="number" step="0.01" min="0" value="{{ client.private_reserve_target_override or '' }}">
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Trust</legend>
+    <label>Primary residence address <span class="hint">(used to look up Zestimate manually each quarter)</span>
+      <input name="trust_property_address" value="{{ client.trust_property_address or '' if client else '' }}">
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Accounts</legend>
+    <p class="hint">Retirement accounts must be 401K, IRA, Roth IRA, or Pension. Non-retirement covers brokerage, checking, savings, options, etc. Liabilities include mortgage, auto loans, etc.</p>
+    <table class="accounts" id="accounts">
+      <thead>
+        <tr>
+          <th>Section</th><th>Owner</th><th>Type</th><th>Nickname / Institution</th><th>Last 4</th><th>Interest %</th><th>Investment?</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in accounts %}
+        <tr>
+          <td>
+            <select name="acct_category[]">
+              <option value="retirement" {% if a.category=='retirement' %}selected{% endif %}>Retirement</option>
+              <option value="non_retirement" {% if a.category=='non_retirement' %}selected{% endif %}>Non-retirement</option>
+              <option value="liability" {% if a.category=='liability' %}selected{% endif %}>Liability</option>
+            </select>
+          </td>
+          <td>
+            <select name="acct_owner[]">
+              <option value="client1" {% if a.owner=='client1' %}selected{% endif %}>Client 1</option>
+              <option value="client2" {% if a.owner=='client2' %}selected{% endif %}>Client 2</option>
+              <option value="joint" {% if a.owner=='joint' %}selected{% endif %}>Joint</option>
+            </select>
+          </td>
+          <td><input name="acct_type[]" value="{{ a.account_type }}" placeholder="e.g. Roth IRA"></td>
+          <td><input name="acct_nickname[]" value="{{ a.nickname or '' }}" placeholder="e.g. Schwab Brokerage">
+              <input name="acct_institution[]" value="{{ a.institution or '' }}" placeholder="Institution" class="sub"></td>
+          <td><input name="acct_last4[]" maxlength="4" value="{{ a.account_number_last4 or '' }}"></td>
+          <td><input name="acct_rate[]" type="number" step="0.001" value="{{ a.interest_rate or '' }}"></td>
+          <td><input type="checkbox" name="acct_is_investment[]" value="1" {% if a.is_investment %}checked{% endif %}></td>
+          <td><button type="button" class="btn small danger" onclick="this.closest('tr').remove()">Remove</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="button" class="btn" onclick="addAccountRow()">+ Add account</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>Insurance deductibles <span class="hint">(used in Private Reserve target)</span></legend>
+    <table class="deductibles" id="deductibles">
+      <thead><tr><th>Label</th><th>Amount</th><th></th></tr></thead>
+      <tbody>
+        {% for d in deductibles %}
+        <tr>
+          <td><input name="ded_label[]" value="{{ d.label }}" placeholder="e.g. Car"></td>
+          <td><input name="ded_amount[]" type="number" step="0.01" min="0" value="{{ d.amount }}"></td>
+          <td><button type="button" class="btn small danger" onclick="this.closest('tr').remove()">Remove</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="button" class="btn" onclick="addDeductibleRow()">+ Add deductible</button>
+  </fieldset>
+
+  <div class="form-actions">
+    <button type="submit" class="btn primary">Save client</button>
+    {% if client %}
+      <a class="btn ghost" href="{{ url_for('client_detail', client_id=client.id) }}">Cancel</a>
+    {% else %}
+      <a class="btn ghost" href="{{ url_for('index') }}">Cancel</a>
+    {% endif %}
+  </div>
+</form>
+
+<template id="acct_row_tpl">
+  <tr>
+    <td><select name="acct_category[]"><option value="retirement">Retirement</option><option value="non_retirement">Non-retirement</option><option value="liability">Liability</option></select></td>
+    <td><select name="acct_owner[]"><option value="joint">Joint</option><option value="client1">Client 1</option><option value="client2">Client 2</option></select></td>
+    <td><input name="acct_type[]" placeholder="e.g. Roth IRA"></td>
+    <td><input name="acct_nickname[]" placeholder="Nickname"><input name="acct_institution[]" placeholder="Institution" class="sub"></td>
+    <td><input name="acct_last4[]" maxlength="4"></td>
+    <td><input name="acct_rate[]" type="number" step="0.001"></td>
+    <td><input type="checkbox" name="acct_is_investment[]" value="1"></td>
+    <td><button type="button" class="btn small danger" onclick="this.closest('tr').remove()">Remove</button></td>
+  </tr>
+</template>
+<template id="ded_row_tpl">
+  <tr>
+    <td><input name="ded_label[]" placeholder="e.g. Car"></td>
+    <td><input name="ded_amount[]" type="number" step="0.01" min="0"></td>
+    <td><button type="button" class="btn small danger" onclick="this.closest('tr').remove()">Remove</button></td>
+  </tr>
+</template>
+
+<script>
+  function addAccountRow() {
+    const tpl = document.getElementById('acct_row_tpl');
+    document.querySelector('#accounts tbody').appendChild(tpl.content.cloneNode(true));
+  }
+  function addDeductibleRow() {
+    const tpl = document.getElementById('ded_row_tpl');
+    document.querySelector('#deductibles tbody').appendChild(tpl.content.cloneNode(true));
+  }
+  document.getElementById('is_married').addEventListener('change', e => {
+    document.getElementById('client2_block').hidden = !e.target.checked;
+  });
+</script>
+{% endblock %}

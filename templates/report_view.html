@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Report {{ report.report_date }} — {{ client.label }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('client_detail', client_id=client.id) }}">← {{ client.label }}</a></div>
+<div class="page-head">
+  <h1>{{ report.report_date }} — {{ client.label }}</h1>
+  <div class="page-head-actions">
+    <a class="btn primary" href="{{ url_for('report_pdf', report_id=report.id, kind='sacs') }}">Download SACS PDF</a>
+    <a class="btn primary" href="{{ url_for('report_pdf', report_id=report.id, kind='tcc') }}">Download TCC PDF</a>
+    <a class="btn" href="{{ url_for('report_edit', report_id=report.id) }}">Edit</a>
+    <form method="post" action="{{ url_for('report_delete', report_id=report.id) }}" style="display:inline"
+          onsubmit="return confirm('Delete this report?')">
+      <button class="btn danger ghost" type="submit">Delete</button>
+    </form>
+  </div>
+</div>
+
+<section class="card">
+  <h2>SACS</h2>
+  <ul class="kv">
+    <li>Inflow: <strong>{{ sacs.inflow | usd }}</strong> /mo</li>
+    <li>Outflow: <strong>{{ sacs.outflow | usd }}</strong> /mo</li>
+    <li>Excess (auto): <strong>{{ sacs.excess | usd }}</strong> /mo</li>
+    <li>Private Reserve balance: <strong>{{ sacs.private_reserve_balance | usd }}</strong></li>
+    <li>Private Reserve target: <strong>{{ sacs.private_reserve_target | usd }}</strong></li>
+    <li>Investment Account balance (Schwab): <strong>{{ sacs.investment_account_balance | usd }}</strong></li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>TCC</h2>
+  <ul class="kv">
+    <li>Client 1 Retirement Total: <strong>{{ tcc.client1_retirement_total | usd }}</strong></li>
+    {% if client.is_married %}<li>Client 2 Retirement Total: <strong>{{ tcc.client2_retirement_total | usd }}</strong></li>{% endif %}
+    <li>Non-Retirement Total (no trust): <strong>{{ tcc.non_retirement_total | usd }}</strong></li>
+    <li>Trust value: <strong>{{ tcc.trust_value | usd }}</strong></li>
+    <li>Liabilities Total (shown separately): <strong>{{ tcc.liabilities_total | usd }}</strong></li>
+    <li class="grand">Grand Total Net Worth: <strong>{{ tcc.grand_total_net_worth | usd }}</strong></li>
+  </ul>
+</section>
+{% endblock %}
